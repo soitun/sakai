@@ -1,5 +1,16 @@
 .#{$namespace}sakai-signup {
 
+	.alertMessageInline {
+		@extend .alert;
+		@extend .alert-danger;
+	}
+
+	.alertMessage {
+		display: block;
+		@extend .alert;
+		@extend .alert-danger;
+	}
+
 	.form-required{
 		&:after{
 			content: "*";
@@ -21,10 +32,6 @@
 	}
 	
 	#meeting{
-		input{
-			margin-right: 0.5em;
-		}
-
 		&\:startTime\.minutes, &\:endTime\.minutes{
 			margin-left: 0.5em;
 		}

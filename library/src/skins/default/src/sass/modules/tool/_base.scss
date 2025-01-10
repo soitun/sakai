@@ -1,20 +1,9 @@
 .#{$namespace}pageColumns--single {
-	.#{$namespace}toolTitleNav__button_container {
-		@include display-flex;
-		@include align-items(center);
-		margin-top: -48px;			// position the buttons beside the tool title
-		
-		@media #{$phone} {	// position the buttons for mobile
-			margin-top: 0;
-			margin-bottom: -22px;
-			sakai-maximise-button {
-				display: none;
-			}
+  .#{$namespace}toolTitleNav__button_container {
+    &.home {
+      top: 0px;
     }
-      &.home {
-			top: 0px;
-		}
-	}
+  } 
 }
 
 .#{$namespace}multipleTools{
@@ -43,16 +32,6 @@
 
 		.#{$namespace}toolBody {
 			border-bottom: none;
-		}
-	}
-
-	.#{$namespace}toolTitleNav__button_container {
-		@include display-flex;
-		@include align-items(center);
-		margin: 0;		// to override the single column if both single and multiple classes apply to the same element
-
-		@media #{$tablet}{
-			font-size: 1.2em;
 		}
 	}
 
@@ -99,8 +78,9 @@
 				display:    block;
 				background: var(--sakai-background-color-1);
 				width: 250px;
-				margin: 10px 0 0 -250px;
-				z-index: 2;
+				margin: -1px 0 0 -250px;
+				z-index: 1000;
+				border: 1px solid var(--sakai-border-color);
 				box-shadow: var(--elevation-3dp);
 				
 				label{
@@ -124,7 +104,7 @@
 					width: 100%;
 				}
 				@media #{$phone}{
-					margin: -1px 0 0 -214px;
+					margin: -1px 0 0 -124px;
 				}
 			}
 		}
@@ -167,18 +147,12 @@
 		}
 		
 		.#{$namespace}itemTitle{
+			margin-left: $standard-space;	// space between text and icon
 			@media #{$tablet}{
 				display: none;
 			}
-			margin-left: $standard-space;	// space between text and icon
 		}
 	}
-
-  sakai-maximise-button {
-    color: var(--button-text-color);
-    font-size: 1.1em;
-  }
-
 }
 
 .#{$namespace}toolBody{
@@ -194,8 +168,9 @@
 .portletBody
 {
 	padding: 0;
+        margin-bottom: 3rem !important;
 	@media #{$phone}{
-		margin: 2.3em 0 0 0;
+		margin: 2.3em 0 3rem 0;
 	}
 	> * {
 		position: relative;
@@ -249,5 +224,23 @@
 
 //Remove excessive heading margin for bootstrap modals
 .modal-title {
-  margin-top: 0;
+	margin-top: 0;
+}
+
+.tool-button-container {
+	background-color: var(--sakai-background-color-1);
+	background-position: right 50%;
+	background-repeat: no-repeat;
+	color: var(--sakai-text-color-1);
+	font-family: "Open Sans", sans-serif;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 0.3em 0.5em 0.3em 0.5em;
+	text-align: left;
+	max-width: 100%;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	border-radius: 3px;
+	border: 1px solid var(--sakai-border-color);
+	margin : 2px;
 }

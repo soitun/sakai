@@ -30,9 +30,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.sakaiproject.assignment.api.model.Assignment;
 import org.sakaiproject.assignment.api.model.AssignmentSubmission;
 import org.sakaiproject.event.api.Event;
-import org.sakaiproject.messaging.api.UserNotification;
 import org.sakaiproject.messaging.api.UserNotificationData;
 import org.sakaiproject.messaging.api.AbstractUserNotificationHandler;
+import org.sakaiproject.messaging.api.model.UserNotification;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -94,7 +94,7 @@ public class GradeAssignmentUserNotificationHandler extends AbstractUserNotifica
                         try {
                             String url = assignmentService.getDeepLink(siteId, assignment.getId(), to.getSubmitter());
                             if (StringUtils.isNotBlank(url)) { 
-                                bhEvents.add(new UserNotificationData(from, to.getSubmitter(), siteId, title, url));
+                                bhEvents.add(new UserNotificationData(from, to.getSubmitter(), siteId, title, url, AssignmentConstants.TOOL_ID));
                             }
                         } catch(Exception exc) {
                             log.error("Error retrieving deep link for assignment {} and user {} on site {}", assignment.getId(), to.getSubmitter(), siteId, exc);

@@ -79,6 +79,7 @@ import org.sakaiproject.lessonbuildertool.tool.view.ExportCCViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.FilePickerViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.GeneralViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.QuestionGradingPaneViewParameters;
+import org.sakaiproject.lessonbuildertool.util.LessonConditionUtil;
 import org.sakaiproject.lessonbuildertool.util.SimplePageItemUtilities;
 import org.sakaiproject.memory.api.Cache;
 import org.sakaiproject.memory.api.MemoryService;
@@ -687,8 +688,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		showAll.setSource("summary");
 		UIInternalLink.make(tofill, "print-view", showAll)
 		    .decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.print_view")));
-		UIInternalLink.make(tofill, "print-all", showAll)
-		    .decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.print_all")));
 		UIInternalLink.make(tofill, "show-pages", showAll)
 		    .decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.showallpages")));
 		
@@ -964,13 +963,11 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		List<SimplePageItem> itemList = null;
 		
 		// items to show
-		if(httpServletRequest.getParameter("printall") != null && currentPage.getTopParent() != null)
-		{
-			itemList = (List<SimplePageItem>) simplePageBean.getItemsOnPage(currentPage.getTopParent());
+		if(httpServletRequest.getParameter("printall") != null && currentPage.getTopParent() != null) {
+			itemList = simplePageBean.getItemsOnPage(currentPage.getTopParent());
 		}
-		else
-		{
-			itemList = (List<SimplePageItem>) simplePageBean.getItemsOnPage(currentPage.getPageId());
+		else {
+			itemList = simplePageBean.getItemsOnPage(currentPage.getPageId());
 		}
 		
 		// Move all items with sequence <= 0 to the end of the list.
@@ -1329,8 +1326,43 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				case SimplePageItem.CHECKLIST: itemClassName += "checklistType"; break;
 				}
 
-				// inline LTI. Our code calls all BLTI items listItem, but the inline version really isn't
+				Map<String,Object> ltiContent = null;
+				Map<String,Object> ltiTool = null;
+
+				String ltiToolNewPage = null;  // Not an LTI tool
+				String ltiContentNewPage = null;
+
+				// If we are an LTI tool...
+				if ( i.getType() == SimplePageItem.BLTI && i.getSakaiId() != null ) {
+					BltiInterface ltiItem = (bltiEntity == null ? null : (BltiInterface) bltiEntity.getEntity(i.getSakaiId()));
+					ltiContent = ltiItem.getContent();
+					ltiTool = ltiItem.getTool();
+					if ( ltiContent != null ) {
+						ltiContentNewPage = ltiContent.get("newpage") != null ? ltiContent.get("newpage").toString() : null;
+					}
+					if ( ltiTool != null ) {
+						ltiToolNewPage = ltiTool.get("newpage") != null ? ltiTool.get("newpage").toString() : null;
+					}
+				}
+
+				// The item's internal format value
+				// "window" = popup, "page" = iframe on separate lessons page, "inline" = iframe on *this* page
 				boolean isInline = (i.getType() == SimplePageItem.BLTI && "inline".equals(i.getFormat()));
+
+				// toolNewPage "0" = never launch in popup, "1" = always launch in popup, "2" = delegate to content
+				if ( "0".equals(ltiToolNewPage) ) {
+					isInline = false;
+					if ( "window".equals(i.getFormat()) ) i.setFormat("page");
+				}
+				if ( "1".equals(ltiToolNewPage) ) {
+					isInline = false;
+					if ( ! "window".equals(i.getFormat()) ) i.setFormat("window");
+				}
+
+				if ( "2".equals(ltiToolNewPage) && "1".equals(ltiContentNewPage) ) {
+					i.setFormat("window");
+					i.setSameWindow(false);
+				}
 
 				if (listItem && !isInline){
 				    itemClassName = itemClassName + " listType";
@@ -1355,6 +1387,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					if (canEditPage) {
 						UIOutput.make(tableRow, "current-item-id2", String.valueOf(i.getId()));
 					}
+
+					// Put the LTI data into the markup
+					if ( StringUtils.isNotEmpty(ltiToolNewPage) ) UIOutput.make(tableRow, "lti-tool-newpage2", ltiToolNewPage);
+					if ( StringUtils.isNotEmpty(ltiContentNewPage) ) UIOutput.make(tableRow, "lti-content-newpage2", ltiContentNewPage);
 
 					// users can declare a page item to be navigational. If so
 					// we display
@@ -1395,23 +1431,23 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					    UIOutput itemicon = UIOutput.make(linkdiv,"item-icon");
 					    switch (i.getType()) {
 					    case SimplePageItem.FORUM:
-						itemicon.decorate(new UIStyleDecorator("icon-sakai--sakai-forums"));
+						itemicon.decorate(new UIStyleDecorator("si si-sakai-forums"));
 						break;
 					    case SimplePageItem.ASSIGNMENT:
-						itemicon.decorate(new UIStyleDecorator("icon-sakai--sakai-assignment-grades"));
+						itemicon.decorate(new UIStyleDecorator("si si-sakai-assignment-grades"));
 						break;
 					    case SimplePageItem.ASSESSMENT:
-						itemicon.decorate(new UIStyleDecorator("icon-sakai--sakai-samigo"));
+						itemicon.decorate(new UIStyleDecorator("si si-sakai-samigo"));
 						break;
-					    case SimplePageItem.BLTI:
-						String bltiIcon = "fa-globe";
-                                                if (bltiEntity != null && ((BltiInterface)bltiEntity).servicePresent()) {
-							LessonEntity lessonEntity = (bltiEntity == null ? null : bltiEntity.getEntity(i.getSakaiId()));
-							String tmp = ((BltiInterface)lessonEntity).getIcon();
-							bltiIcon = (tmp == null) ? bltiIcon : tmp;
-                                                }
-						itemicon.decorate(new UIStyleDecorator(bltiIcon));
-						break;
+						case SimplePageItem.BLTI:
+							String bltiIcon = "fa-globe";
+							if (bltiEntity != null && ((BltiInterface)bltiEntity).servicePresent()) {
+								LessonEntity lessonEntity = (bltiEntity == null ? null : bltiEntity.getEntity(i.getSakaiId()));
+								String tmp = ((BltiInterface)lessonEntity).getIcon();
+								bltiIcon = (tmp == null) ? bltiIcon : tmp;
+							}
+							itemicon.decorate(new UIStyleDecorator(bltiIcon));
+							break;
 					    case SimplePageItem.PAGE:
 						itemicon.decorate(new UIStyleDecorator("fa-folder-open-o"));
 						break;
@@ -1505,6 +1541,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// it contains information needed to populate the "edit"
 						// popup dialog
 						UIOutput.make(tableRow, "prerequisite-info", String.valueOf(i.isPrerequisite()));
+						UIOutput.make(tableRow, "required-info", String.valueOf(i.isRequired()));
 
 						if (i.getType() == SimplePageItem.ASSIGNMENT) {
 							// the type indicates whether scoring is letter
@@ -1567,7 +1604,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							    notPublished = quizEntity.notPublished(i.getSakaiId());
 						} else if (i.getType() == SimplePageItem.BLTI) {
 						    UIOutput.make(tableRow, "type", "b");
-						    LessonEntity blti= (bltiEntity == null ? null : bltiEntity.getEntity(i.getSakaiId()));
+						    LessonEntity blti = (bltiEntity == null ? null : bltiEntity.getEntity(i.getSakaiId()));
 						    if (blti != null) {
 							String editUrl = blti.editItemUrl(simplePageBean);
 							if (editUrl != null)
@@ -1601,6 +1638,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 							}
 						} else if (i.getType() == SimplePageItem.RESOURCE) {
+							UIOutput.make(tableRow, "type", Integer.valueOf(i.getType()).toString());
 						        try {
 							    itemGroupString = simplePageBean.getItemGroupStringOrErr(i, null, true);
 							} catch (IdUnusedException e) {
@@ -2118,7 +2156,20 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
                             boolean isPDF = simplePageBean.isPDFType(i);
 
                             if (isPDF) {
-                                String pdfSRC = String.format("/library/webjars/pdf-js/2.9.359/web/viewer.html?file=%s", movieUrl);
+                                try {
+                                    // The PDF URL has to be encoded, some URLs can contain characters resulting in the PDF not loading properly.
+                                    // https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#can-i-specify-a-different-pdf-in-the-default-viewer
+                                    movieUrl = URLEncoder.encode(movieUrl, "UTF-8")
+                                        .replaceAll("\\+", "%20")
+                                        .replaceAll("\\%21", "!")
+                                        .replaceAll("\\%27", "'")
+                                        .replaceAll("\\%28", "(")
+                                        .replaceAll("\\%29", ")")
+                                        .replaceAll("\\%7E", "~");
+                                } catch (Exception ex) {
+                                    log.warn("Error encoding the PDF url, the PDF might not load in the UI. {}", ex.getMessage());
+                                }
+                                String pdfSRC = String.format("/library/webjars/pdf-js/4.0.269/web/viewer.html?file=%s", movieUrl);
                                 item2 = UIOutput.make(tableRow, "pdfEmbed").decorate(new UIFreeAttributeDecorator("src", pdfSRC)).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
                             } else if (useEmbed) {
                                 item2 = UIOutput.make(tableRow, "movieEmbed").decorate(new UIFreeAttributeDecorator("src", movieUrl)).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
@@ -3112,7 +3163,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					UIOutput.make(tableRow, "questionDiv");
 					
 					UIVerbatim.make(tableRow, "questionText", i.getAttribute("questionText"));
-					UIInput.make(tableRow, "raw-question-text", "#{simplePageBean.questionText}", i.getAttribute("questionText"));
 					
 					List<SimplePageQuestionAnswer> answers = new ArrayList<SimplePageQuestionAnswer>();
 					if("multipleChoice".equals(i.getAttribute("questionType"))) {
@@ -3122,6 +3172,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						makeCsrf(questionForm, "csrf4");
 
 						UIInput.make(questionForm, "multipleChoiceId", "#{simplePageBean.questionId}", String.valueOf(i.getId()));
+						UIInput.make(questionForm, "raw-question-text", "#{simplePageBean.questionText}", i.getAttribute("questionText"));
 						
 						String[] options = new String[answers.size()];
 						String initValue = null;
@@ -3172,8 +3223,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						makeCsrf(questionForm, "csrf5");
 
 						UIInput.make(questionForm, "shortanswerId", "#{simplePageBean.questionId}", String.valueOf(i.getId()));
-						
+						UIInput.make(questionForm, "raw-question-text", "#{simplePageBean.questionText}", i.getAttribute("questionText"));
 						UIInput shortanswerInput = UIInput.make(questionForm, "shortanswerInput", "#{simplePageBean.questionResponse}");
+
 						if(!isAvailable || response != null) {
 							if (canSeeAll)
 							    fakeDisableLink(shortanswerInput, messageLocator);
@@ -3224,9 +3276,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						    responseCounts.put(total.getResponseId(), total.getCount());
 						
 						for(int j = 0; j < answers.size(); j++) {
+							char letter = (char) ('A' + j); // Convert number to corresponding letter
 							UIBranchContainer pollContainer = UIBranchContainer.make(tableRow, "questionPollData:", String.valueOf(j));
-							UIOutput.make(pollContainer, "questionPollText", Integer.toString(j+1));
-							UIOutput.make(pollContainer, "questionPollLegend", Integer.toString(j+1) + ":" + answers.get(j).getText());
+							UIOutput.make(pollContainer, "questionPollText", String.valueOf(letter));
+							UIOutput.make(pollContainer, "questionPollLegend", letter + ":" + answers.get(j).getText());
 							UIOutput.make(pollContainer, "questionPollNumber", String.valueOf(responseCounts.get(answers.get(j).getId())));
 						}
 					}
@@ -3525,6 +3578,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					}
 				}
 				} // else - is not a subpage
+
 			}
 			if (includeTwitterLibrary) {
 				UIOutput.make(tofill, "twitter-library");
@@ -3624,8 +3678,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	 * @param simplePageToolDao
 	 * @return Whether or not this item is available.
 	 */
-	protected boolean makeLink(UIContainer container, String ID, SimplePageItem i, SimplePageBean simplePageBean, SimplePageToolDao simplePageToolDao, MessageLocator messageLocator,
-			boolean canEditPage, SimplePage currentPage, boolean notDone, Status status, boolean forceButtonColor, String color) {
+	protected boolean makeLink(UIContainer container, String ID, SimplePageItem i, SimplePageBean simplePageBean,
+                               SimplePageToolDao simplePageToolDao, MessageLocator messageLocator, boolean canEditPage,
+                               SimplePage currentPage, boolean notDone, Status status, boolean forceButtonColor, String color) {
 		String URL = "";
 		boolean available = simplePageBean.isItemAvailable(i);
 		boolean usable = available || canEditPage;
@@ -3644,23 +3699,22 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					link.decorate(new UIFreeAttributeDecorator("lessonbuilderitem", itemString));
 					if (! available)
 					    fakeDisableLink(link, messageLocator);
-				}
-				else {
+				} else {
 				    // run this through /access/lessonbuilder so we can track it even if the user uses the context menu
 				    // We could do this only for the notDone case, but I think it could cause trouble for power users
 				    // if the url isn't always consistent.
 				    if (i.getAttribute("multimediaUrl") != null) { // resource where we've stored the URL ourselves
-					URL = "/access/lessonbuilder/item/" + i.getId() + "/";
+					    URL = "/access/lessonbuilder/item/" + i.getId() + "/";
 				    } else {
-					URL = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
+					    URL = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
 				    }
 				    UILink link = UILink.make(container, ID, URL);
 				    link.decorate(new UIFreeAttributeDecorator("target", "_blank"));
 				    if (notDone)
-					link.decorate(new UIFreeAttributeDecorator("onclick", 
+					    link.decorate(new UIFreeAttributeDecorator("onclick",
 										   "afterLink($(this)," + i.getId() + ") ; return true"));
 				    if (! available)
-					fakeDisableLink(link, messageLocator);
+					    fakeDisableLink(link, messageLocator);
 				}
 			}
 
@@ -3846,67 +3900,67 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		} else if (i.getType() == SimplePageItem.BLTI) {
 		    LessonEntity lessonEntity = (bltiEntity == null ? null : bltiEntity.getEntity(i.getSakaiId()));
 		    if ("inline".equals(i.getFormat())) {
-			// no availability 
-			String height=null;
-			if (i.getHeight() != null && !i.getHeight().equals(""))
-			    height = i.getHeight().replace("px","");  // just in case
-			
-			UIComponent iframe = UIOutput.make(container, "blti-iframe")
-					.decorate(new UIFreeAttributeDecorator("allow", String.join(";",
-							Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
-									.orElseGet(() -> new String[]{}))));
-			if (lessonEntity != null)
-			    iframe.decorate(new UIFreeAttributeDecorator("src", lessonEntity.getUrl()));
-			
-			String h = "300";
-			if (height != null && !height.trim().equals(""))
-			    h = height;
-			
-			iframe.decorate(new UIFreeAttributeDecorator("height", h));
-			iframe.decorate(new UIFreeAttributeDecorator("title", i.getName()));
-			// normally we get the name from the link text, but there's no link text here
-			UIOutput.make(container, "item-name", i.getName());
-		    } else if (!"window".equals(i.getFormat())) {
-			// this is the default if format isn't valid or is missing
-			if (usable && lessonEntity != null) {
-			    // I'm fairly sure checkitempermissions doesn't do anything useful for LTI,
-			    // as it isn't group aware
-				if (i.isPrerequisite()) {
-					simplePageBean.checkItemPermissions(i, true);
-				}
-				GeneralViewParameters view = new GeneralViewParameters(ShowItemProducer.VIEW_ID);
-				view.setSendingPage(currentPage.getPageId());
-				view.setItemId(i.getId());
-				UILink link = UIInternalLink.make(container, "link", view);
-				link.decorate(new UIFreeAttributeDecorator("lessonbuilderitem", itemString));
-				if (! available)
-				    fakeDisableLink(link, messageLocator);
-			} else {
-				if (i.isPrerequisite()) {
-					simplePageBean.checkItemPermissions(i, false);
-				}
-				fake = true; // need to set this in case it's available for missing entity
-			}
-		    } else {
-			if (usable && lessonEntity != null) {
-			    if (i.isPrerequisite()) {
-				simplePageBean.checkItemPermissions(i, true);
-			    }
-			    URL = lessonEntity.getUrl();
-			    // UIInternalLink link = LinkTrackerProducer.make(container, ID, i.getName(), URL, i.getId(), notDone);
-			    UILink link = UILink.make(container, ID, i.getName(), URL);
-			    link.decorate(new UIFreeAttributeDecorator("lessonbuilderitem", itemString));
-			    link.decorate(new UIFreeAttributeDecorator("target", "_blank"));
-			    if (! available)
-				fakeDisableLink(link, messageLocator);
-			    if (notDone)
-				link.decorate(new UIFreeAttributeDecorator("onclick", 
-					 "setTimeout(function(){window.location.reload(true)},3000); return true"));
+                // no availability
+                String height=null;
+                if (i.getHeight() != null && !i.getHeight().equals(""))
+                    height = i.getHeight().replace("px","");  // just in case
 
-			} else {
-			    fake = true; // need to set this in case it's available for missing entity
-			}
-		    }
+                UIComponent iframe = UIOutput.make(container, "blti-iframe")
+                        .decorate(new UIFreeAttributeDecorator("allow", String.join(";",
+                                Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
+                                        .orElseGet(() -> new String[]{}))));
+                if (lessonEntity != null)
+                    iframe.decorate(new UIFreeAttributeDecorator("src", lessonEntity.getUrl()));
+
+                String h = "300";
+                if (height != null && !height.trim().equals(""))
+                    h = height;
+
+                iframe.decorate(new UIFreeAttributeDecorator("height", h));
+                iframe.decorate(new UIFreeAttributeDecorator("title", i.getName()));
+                // normally we get the name from the link text, but there's no link text here
+                UIOutput.make(container, "item-name", i.getName());
+            } else if (!"window".equals(i.getFormat()) && (i.getFormat() != null)) {
+                // this is the default if format isn't valid or is missing
+                if (usable && lessonEntity != null) {
+                    // I'm fairly sure checkitempermissions doesn't do anything useful for LTI,
+                    // as it isn't group aware
+                    if (i.isPrerequisite()) {
+                        simplePageBean.checkItemPermissions(i, true);
+                    }
+                    GeneralViewParameters view = new GeneralViewParameters(ShowItemProducer.VIEW_ID);
+                    view.setSendingPage(currentPage.getPageId());
+                    view.setItemId(i.getId());
+                    UILink link = UIInternalLink.make(container, "link", view);
+                    link.decorate(new UIFreeAttributeDecorator("lessonbuilderitem", itemString));
+                    if (! available)
+                        fakeDisableLink(link, messageLocator);
+                } else {
+                    if (i.isPrerequisite()) {
+                        simplePageBean.checkItemPermissions(i, false);
+                    }
+                    fake = true; // need to set this in case it's available for missing entity
+                }
+            } else {
+                if (usable && lessonEntity != null) {
+					if (i.isPrerequisite()) {
+					    simplePageBean.checkItemPermissions(i, true);
+					}
+					URL = lessonEntity.getUrl();
+					// UIInternalLink link = LinkTrackerProducer.make(container, ID, i.getName(), URL, i.getId(), notDone);
+					UILink link = UILink.make(container, ID, URL);
+					link.decorate(new UIFreeAttributeDecorator("lessonbuilderitem", itemString));
+					link.decorate(new UIFreeAttributeDecorator("target", "_blank"));
+					if (! available)
+						fakeDisableLink(link, messageLocator);
+					if (notDone)
+						link.decorate(new UIFreeAttributeDecorator("onclick",
+						 "setTimeout(function(){window.location.reload(true)},3000); return true"));
+
+				} else {
+					fake = true; // need to set this in case it's available for missing entity
+				}
+            }
 		}
 
 		String note = null;
@@ -4004,14 +4058,15 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	}
 
 	private static String getUserDisplayName(String owner) {
-		String userDisplayName = StringUtils.EMPTY;
+		if (owner == null) return StringUtils.EMPTY;
+
 		try {
 			User user = UserDirectoryService.getUser(owner);
-			userDisplayName = String.format("%s (%s)", user.getSortName(), user.getEid());
+			return String.format("%s (%s)", user.getSortName(), user.getEid());
 		} catch (UserNotDefinedException e) {
-			log.info("Owner #: " + owner + " does not have an associated user.");
+            log.info("Owner #: {} does not have an associated user.", owner);
 		}
-		return userDisplayName;
+		return StringUtils.EMPTY;
 	}
 
 	private static User getUser(String userId) {
@@ -4264,7 +4319,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			UIOutput.make(tofill, "calendar-link").decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.calendar-descrip")));
 			UIForm form = UIForm.make(tofill, "add-calendar-form");
 			UIInput.make(form, "calendar-addBefore", "#{simplePageBean.addBefore}");
-			makeCsrf(form, "csrf28");
+			makeCsrf(form, "csrf29");
 			UICommand.make(form, "add-calendar", "#{simplePageBean.addCalendar}");
 		    }		    
 		    UIOutput.make(tofill, "quiz-li");
@@ -4306,32 +4361,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				UILink twitterLink = UIInternalLink.makeURL(tofill, "add-twitter", "#");
 				twitterLink.decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.twitter-descrip")));
 			}
-		    // in case we're on an old system without current BLTI
-		    if (bltiEntity != null && ((BltiInterface)bltiEntity).servicePresent()) {
-			Collection<BltiTool> bltiTools = simplePageBean.getBltiTools();
-			if (bltiTools != null) {
-			    int i = 0;
-			    for (BltiTool bltiTool: bltiTools) {
-				UIBranchContainer toolItems = UIBranchContainer.make(tofill, "blti-tool:", String.valueOf(i));
-				i++;
-				GeneralViewParameters params = new GeneralViewParameters();
-				params.setSendingPage(currentPage.getPageId());
-				params.addTool = bltiTool.id;
-				params.viewID = BltiPickerProducer.VIEW_ID;
-				UILink link = UIInternalLink.make(toolItems, "add-blti-tool", bltiTool.title, params);
-				link.decorate(new UITooltipDecorator(bltiTool.description));
-				if (bltiTool.description != null)
-				    UIOutput.make(toolItems, "add-blti-description", bltiTool.description);
-			    }
-			}
-			UIOutput.make(tofill, "blti-li");
-			createToolBarLink(BltiPickerProducer.VIEW_ID, tofill, "add-blti", "simplepage.blti", currentPage, "simplepage.blti.tooltip");
-		    }
-			// App Store Only BLTI Link
-			if (bltiEntity != null && ((BltiInterface)bltiEntity).servicePresent()) {
-				UIOutput.make(tofill, "blti-app-li");
-				createAppStoreToolBarLink(BltiPickerProducer.VIEW_ID, tofill, "add-blti-app", "simplepage.blti.app", currentPage, "simplepage.blti.app.tooltip");
-			}
+
+			// Add External Learning App
+			UIOutput.make(tofill, "blti-app-li");
+			createAppStoreToolBarLink(BltiPickerProducer.VIEW_ID, tofill, "add-blti-app", "simplepage.blti.app", currentPage, "simplepage.blti.app.tooltip");
 			
 		}
 	}
@@ -4518,6 +4551,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UISelect.make(form, "assignment-dropdown", SimplePageBean.GRADES, "#{simplePageBean.dropDown}", SimplePageBean.GRADES[0]);
 		UIInput.make(form, "assignment-points", "#{simplePageBean.points}");
 
+		LessonConditionUtil.makeConditionEditor(simplePageBean, form, "common-condition-editor");
+		LessonConditionUtil.makeConditionPicker(simplePageBean, form, "common-condition-picker");
+
 		UICommand.make(form, "edit-item", messageLocator.getMessage("simplepage.edit"), "#{simplePageBean.editItem}");
 
 		String indentOptions[] = {"0","1","2","3","4","5","6","7","8"};
@@ -4548,7 +4584,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		if (!simplePageBean.isStudentPage(currentPage)) {
 		    createGroupList(form, null, "", "#{simplePageBean.selectedGroups}");
 		}
-		UICommand.make(form, "delete-item", messageLocator.getMessage("simplepage.delete"), "#{simplePageBean.deleteItem}");
 		UICommand.make(form, "edit-item-cancel", messageLocator.getMessage("simplepage.cancel"), null);
 	}
 
@@ -4627,6 +4662,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UILink.make(tofill, "mm-additional-website-instructions", messageLocator.getMessage("simplepage.additional-website-instructions-label"), 
 			    getLocalizedURL( "website.html", true));
 
+		
+		
+		UIOutput.make(tofill, "mm-max-file-upload-size", String.valueOf(uploadMax));
 		UIForm form = UIForm.make(tofill, "add-multimedia-form");
 		makeCsrf(form, "csrf9");
 
@@ -4672,6 +4710,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		makeCsrf(form, "csrf11");
 
 		UICommand.make(form, "import-cc-submit", messageLocator.getMessage("simplepage.import_message"), "#{simplePageBean.importCc}");
+		UIBoundBoolean.make(form, "import-cc-archive", "#{simplePageBean.importArchive}", false);
 		UICommand.make(form, "mm-cancel", messageLocator.getMessage("simplepage.cancel"), null);
 
 		UIBoundBoolean.make(form, "import-toplevel", "#{simplePageBean.importtop}", false);
@@ -4837,6 +4876,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		if (!simplePageBean.isStudentPage(currentPage)) {
 		    UIOutput.make(form, "multi-prerequisite-section");
 		    UIBoundBoolean.make(form, "multi-prerequisite", "#{simplePageBean.prerequisite}",false);
+
+			LessonConditionUtil.makeConditionPicker(simplePageBean, form, "multimedia-condition-picker");
 		}
 
 		FilePickerViewParameters fileparams = new FilePickerViewParameters();
@@ -5143,6 +5184,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UIBoundBoolean.make(form, "comments-required", "#{simplePageBean.required}");
 		UIBoundBoolean.make(form, "comments-prerequisite", "#{simplePageBean.prerequisite}");
 
+		LessonConditionUtil.makeConditionPicker(simplePageBean, form, "comments-condition-picker");
+
 		UICommand.make(form, "delete-comments-item", messageLocator.getMessage("simplepage.delete"), "#{simplePageBean.deleteItem}");
 		UICommand.make(form, "update-comments", messageLocator.getMessage("simplepage.edit"), "#{simplePageBean.updateComments}");
 		UICommand.make(form, "cancel-comments", messageLocator.getMessage("simplepage.cancel"), null);
@@ -5161,6 +5204,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UIBoundBoolean.make(form, "student-comments-anon", "#{simplePageBean.forcedAnon}");
 		UIBoundBoolean.make(form, "student-required", "#{simplePageBean.required}");
 		UIBoundBoolean.make(form, "student-prerequisite", "#{simplePageBean.prerequisite}");
+
+		LessonConditionUtil.makeConditionPicker(simplePageBean, form, "student-condition-picker");
 		
 		UIOutput.make(form, "peer-evaluation-creation");
 		
@@ -5235,6 +5280,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		((SakaiFCKTextEvolver) richTextEvolver).evolveTextInput(questionInput, "1");
 
 		UIInput.make(form, "question-answer-full-shortanswer", "#{simplePageBean.questionAnswer}");
+
+		LessonConditionUtil.makeConditionPicker(simplePageBean, form, "question-condition-picker");
 
 		UIOutput gradeBook = UIOutput.make(form, "gradeBookQuestionsDiv");
 		if(!simplePageBean.isGradebookExists()) {

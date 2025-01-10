@@ -124,6 +124,7 @@
                     height: 76px;
                     border: 1px solid #BBB;
                     border-radius: 0;
+                    background-repeat: no-repeat;
                 }
             }
 
@@ -251,5 +252,30 @@
             display: none;
         }
 
+    }
+
+    // S2U-42
+    #card-game {
+        .act > button {
+            margin-bottom: $standard-space;
+        }
+
+        .feedback-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        @media #{$smallPhone} {
+            .user-image-wrapper {
+                display: flex;
+                justify-content: center;
+            }
+
+            .act {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
     }
 }

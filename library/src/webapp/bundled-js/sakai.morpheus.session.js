@@ -36,6 +36,35 @@ var setup_timeout_config = function(){
 
 }
 
+function createDHTMLMask(callback) {
+  const portalMask = document.createElement('div');
+  portalMask.id = 'portalMask';
+  portalMask.style.height = `${document.documentElement.scrollHeight}px`;
+  portalMask.style.width = '100%';
+  portalMask.style.zIndex = '1000';
+  portalMask.style.top = '0';
+  portalMask.style.left = '0';
+  portalMask.style.position = 'absolute';
+  portalMask.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  portalMask.style.display = 'flex';
+  portalMask.style.alignItems = 'center';
+  portalMask.style.justifyContent = 'center';
+
+  portalMask.addEventListener('click', function (event) {
+    closeDrawer();
+    event.stopPropagation();
+  });
+
+  document.body.appendChild(portalMask);
+
+  (typeof callback === 'function') && callback();
+}
+
+function removeDHTMLMask() {
+  const portalMask = document.getElementById('portalMask');
+  portalMask && document.body.removeChild(portalMask);
+}
+
 var poll_session_data = function(){
 
   $PBJQ.ajax({
@@ -113,7 +142,7 @@ function show_timeout_alert(min){
   }
   
   if (!$PBJQ("#portalMask").get(0)) {
-    createDHTMLMask(dismiss_session_alert);
+    createDHTMLMask();
     $PBJQ("#portalMask").css("z-index", 1000);
   }
   if ($PBJQ("#timeout_alert_body").get(0)) {

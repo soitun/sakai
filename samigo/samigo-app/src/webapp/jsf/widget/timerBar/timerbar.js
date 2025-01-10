@@ -3,6 +3,7 @@
           cache: false,
       });
 
+      var titleMessage;
       var hideMessage;
       var timeWarning;
       var timeWarningClose;
@@ -50,6 +51,7 @@
               srRemaining = data.srRemaining;
               srTimerInfo = data.srTimerInfo;
               subMessage = data.subMessage;
+              titleMessage = data.titleMessage;
           }
       });
 
@@ -58,13 +60,16 @@
           <link href='/samigo-app/css/timerbar.css' type='text/css' rel='stylesheet' media='all' />
           <div id='timerBlock' aria-hidden='true'>
               <div class="progress-wrapper">
-                  <div class="progress">
-                      <div class="progress-bar progress-label-wrapper">
-                          <span class='progress-label'></span>
+                  <div class="timer-title">${ titleMessage }</div>
+                  <div class="progress-wrapper-container">
+                      <div class="progress">
+                          <div class="progress-bar progress-label-wrapper">
+                              <span class='progress-label'></span>
+                          </div>
                       </div>
-                  </div>
-                  <div class="progress">
-                      <div id='progressbar' class="progress-bar"></div>
+                      <div class="progress">
+                          <div id='progressbar' class="progress-bar"></div>
+                      </div>
                   </div>
               </div>
               <div class="warn-banner">
@@ -347,8 +352,14 @@
       });
 
       $.getJSON(routePrefix + "getTimerProgress" + routeSuffix, ajaxQuery, function(data) {
-          totalTime = data[0];
-          elapsedTime = data[1];
+          if (data[0] === 0) {
+            totalTime = data[3];
+            elapsedTime = data[4];
+          }
+          else {
+            totalTime = data[0];
+            elapsedTime = data[1];
+          }
           lastAid = data[2];
 
           if (totalTime === elapsedTime) {
@@ -363,16 +374,23 @@
           }
 
           disableWarning = (100 - Math.floor(((totalTime - remain) / totalTime) * 100)) < 10; 
-          remain = data[0] - data[1];
+          remain = totalTime - elapsedTime;
           setProgressBar();
-          var requestScale = (data[0] / 100) * 1000;
+          var requestScale = (totalTime / 100) * 1000;
           if (requestScale < minReqScale) {
               requestScale = minReqScale;
           }
 
           ajaxCount = setInterval(function() {
               $.getJSON(routePrefix + "getTimerProgress" + routeSuffix, ajaxQuery, function(data) {
-                  elapsedTime = data[1];
+                  if (data[0] === 0) {
+                    totalTime = data[3];
+                    elapsedTime = data[4];
+                  }
+                  else {
+                    totalTime = data[0];
+                    elapsedTime = data[1];
+                  }
                   lastAid = data[2];
                   if (totalTime === elapsedTime) {
                       clearInterval(localCount);
@@ -383,7 +401,7 @@
                   if (currentAid && lastAid && currentAid > 0 && lastAid > 0 && currentAid !== lastAid) {
                       $("#multiple-tabs-warning").show();
                   }
-                  remain = data[0] - data[1];
+                  remain = totalTime - elapsedTime;
                   setProgressBar();
               });
           }, requestScale);

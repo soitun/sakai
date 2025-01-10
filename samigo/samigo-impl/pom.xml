@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.sakaiproject.samigo</groupId>
         <artifactId>samigo</artifactId>
-        <version>24-SNAPSHOT</version>
+        <version>25-SNAPSHOT</version>
     </parent>
 
     <name>Samigo Impl</name>
@@ -116,6 +116,10 @@
         <dependency>
             <groupId>OKI</groupId>
             <artifactId>OkiOSID</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.sakaiproject.edu-services.sections</groupId>
+            <artifactId>sections-api</artifactId>
         </dependency>
     </dependencies>
 

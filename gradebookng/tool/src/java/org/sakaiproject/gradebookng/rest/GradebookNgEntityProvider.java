@@ -225,6 +225,7 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 	@SuppressWarnings("unused")
 	@EntityCustomAction(action = "comments", viewKey = EntityView.VIEW_LIST)
 	public String getComments(final EntityView view, final Map<String, Object> params) {
+
 		// get params
 		final String siteId = (String) params.get("siteId");
 		final long assignmentId = NumberUtils.toLong((String) params.get("assignmentId"));
@@ -377,7 +378,7 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 				log.warn(errorMsg);
 				throw new EntityException(errorMsg, "", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} else {
-				String from = serverConfigurationService.getString("setup.request", "no-reply@" + serverConfigurationService.getServerName());
+				String from = serverConfigurationService.getSmtpFrom();
 				List<String> headers = new ArrayList<>();
 				String subject = (String) params.get("subject");
 				headers.add("Subject: " + subject);

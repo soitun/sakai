@@ -28,6 +28,7 @@ import com.opencsv.CSVParser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -39,8 +40,12 @@ import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
-import org.sakaiproject.basiclti.util.SakaiBLTIUtil;
+import org.sakaiproject.lti.util.SakaiLTIUtil;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.archive.api.ArchiveService;
+import org.sakaiproject.condition.api.ConditionService;
+import org.sakaiproject.condition.api.model.Condition;
+import org.sakaiproject.condition.api.model.ConditionType;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
 import org.sakaiproject.content.api.ContentEntity;
@@ -72,6 +77,7 @@ import org.sakaiproject.lessonbuildertool.SimplePagePeerEvalResult;
 import org.sakaiproject.lessonbuildertool.SimplePageQuestionAnswer;
 import org.sakaiproject.lessonbuildertool.SimplePageQuestionResponse;
 import org.sakaiproject.lessonbuildertool.SimpleStudentPage;
+import org.sakaiproject.lessonbuildertool.api.LessonBuilderConstants;
 import org.sakaiproject.lessonbuildertool.api.LessonBuilderEvents;
 import org.sakaiproject.lessonbuildertool.cc.CartridgeLoader;
 import org.sakaiproject.lessonbuildertool.cc.Parser;
@@ -121,7 +127,7 @@ import org.sakaiproject.util.api.FormattedText;
 import org.sakaiproject.util.comparator.AlphaNumericComparator;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
-import org.tsugi.basiclti.ContentItem;
+import org.tsugi.lti.ContentItem;
 import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.rsf.components.UIContainer;
 import uk.org.ponder.rsf.components.UIInternalLink;
@@ -197,7 +203,6 @@ public class SimplePageBean {
 	public static final String LESSONBUILDER_ITEMNAME = "lessonbuilder.itemname";
 	public static final String LESSONBUILDER_PATH = "lessonbuilder.path";
 	public static final String LESSONBUILDER_BACKPATH = "lessonbuilder.backpath";
-	public static final String LESSONBUILDER_ID = "sakai.lessonbuildertool";
 	public static final String CALENDAR_TOOL_ID = "sakai.schedule";
 	public static final String TWITTER_WIDGET_DEFAULT_HEIGHT = "300";
 	public static final String ANNOUNCEMENTS_TOOL_ID = "sakai.announcements";
@@ -292,6 +297,8 @@ public class SimplePageBean {
 	private String linkUrl;
 
 	private String height, width;
+
+	@Setter private Boolean importArchive = false;
 
 	private String description;
 	private String name;
@@ -442,6 +449,7 @@ public class SimplePageBean {
 	public static final String INTERIOR_TASK = "interiorTask";
 	public static final String ADD_SUBPAGE_LIST = "addSubpageList";
 	public static final String SUCCESS = "success";
+	public static final String PREFIX_URL = "/url/";
 
         // SAK-41846 - Counters to adjust item sequences when multiple files are added simultaneously
         private int totalMultimediaFilesToAdd = 0;
@@ -472,7 +480,9 @@ public class SimplePageBean {
     @Setter private UserDirectoryService userDirectoryService;
     @Setter private FormattedText formattedText;
     @Setter private UserTimeService userTimeService;
+    @Setter private ConditionService conditionService;
     @Getter @Setter private TaskService taskService;
+    @Getter @Setter private ArchiveService archiveService;
 
     private LessonEntity forumEntity = null;
     	public void setForumEntity(Object e) {
@@ -2186,6 +2196,18 @@ public class SimplePageBean {
 			simplePageToolDao.deleteAllSavedStatusesForChecklist(item);
 		}
 
+		//delete corresponding response entries for question item
+		if(item.getType() == SimplePageItem.QUESTION) {
+			simplePageToolDao.deleteQuestionResponsesForItem(item);
+		}
+
+		//delete comment entries
+		if(item.getType() == SimplePageItem.COMMENTS) {
+			simplePageToolDao.deleteCommentsForLessonsItem(item);
+		}
+
+		// delete lessonsItem log
+		simplePageToolDao.deleteLogForLessonsItem(item);
 
 		boolean deleted = simplePageToolDao.deleteItem(item);
 
@@ -2204,6 +2226,13 @@ public class SimplePageBean {
 					it.setSequence(it.getSequence() - 1);
 					update(it);
 				}
+			}
+		}
+
+		// When a question item is deleted, remove assotiated Conditions
+		if (deleted && item.getType() == SimplePageItem.QUESTION) {
+			for (Condition condition : getItemConditions(item)) {
+				conditionService.deleteCondition(condition.getId());
 			}
 		}
 
@@ -3335,7 +3364,13 @@ public class SimplePageBean {
 						ourGroupName = utf8truncate(ourGroupName, 99);
 					    else if (ourGroupName.length() > 99) 
 						ourGroupName = ourGroupName.substring(0, 99);
-					    String groupId = GroupPermissionsService.makeGroup(getCurrentPage().getSiteId(), ourGroupName, oldGroupName, i.getSakaiId(), this);
+					    String groupId = null;
+					    try {
+						securityService.pushAdvisor(siteUpdAdvisor);
+						groupId = GroupPermissionsService.makeGroup(getCurrentPage().getSiteId(), ourGroupName, oldGroupName, i.getSakaiId(), this);
+					    } finally {
+						securityService.popAdvisor(siteUpdAdvisor);
+					    }
 					    saveItem(simplePageToolDao.makeGroup(i.getSakaiId(), groupId, groups, getCurrentPage().getSiteId()));
 
 					    // update the tool access control to point to our access control group
@@ -4492,7 +4527,7 @@ public class SimplePageBean {
 			} else if (newPoints != null && currentPoints == null) {
 				try {
 					add = gradebookIfc.addExternalAssessment(site.getId(), "lesson-builder:" + page.getPageId(), null,
-						       	pageTitle, newPoints, null, LESSONBUILDER_ID);
+							pageTitle, newPoints, null, LessonBuilderConstants.TOOL_ID);
 				} catch(ConflictingAssignmentNameException cane) {
 					add = false;
 					setErrMessage(messageLocator.getMessage("simplepage.existing-gradebook"));
@@ -4539,19 +4574,8 @@ public class SimplePageBean {
 		}
 
 		if (pageTitle != null && pageItem.getPageId() == 0) {
-				// we need a security advisor because we're allowing users to edit the page if they
-				// have
-				// simplepage.upd privileges, but site.save requires site.upd.
-				SecurityAdvisor siteUpdAdvisor = new SecurityAdvisor() {
-					public SecurityAdvice isAllowed(String userId, String function, String reference) {
-						if (function.equals(SiteService.SECURE_UPDATE_SITE) && reference.equals("/site/" + getCurrentSiteId())) {
-							return SecurityAdvice.ALLOWED;
-						} else {
-							return SecurityAdvice.PASS;
-						}
-					}
-				};
-
+			// we need a security advisor because we're allowing users to edit the page if they
+			// have simplepage.upd privileges, but site.save requires site.upd.
 			try {
 				securityService.pushAdvisor(siteUpdAdvisor);
 
@@ -5005,7 +5029,7 @@ public class SimplePageBean {
 		Site site = getCurrentSite();
 		SitePage sitePage = site.addPage();
 
-		ToolConfiguration tool = sitePage.addTool(LESSONBUILDER_ID);
+		ToolConfiguration tool = sitePage.addTool(LessonBuilderConstants.TOOL_ID);
 		String toolId = tool.getPageId();
 		
 		SimplePage page;
@@ -5573,7 +5597,8 @@ public class SimplePageBean {
 				return false;
 			    break;
 			case SimplePageItem.ASSESSMENT:
-			    if (quizEntity.notPublished(item.getSakaiId()))
+				entity = quizEntity.getEntity(item.getSakaiId(), this);
+				if (entity == null || entity.notPublished())
 				return false;
 			    break;
 			case SimplePageItem.FORUM:
@@ -5596,6 +5621,13 @@ public class SimplePageBean {
 		    }
 		} finally {
 			popAdvisor(advisor);
+		}
+
+		Condition rootCondition = conditionService.getRootConditionForItem(currentSiteId, LessonBuilderConstants.TOOL_ID,
+				Long.toString(item.getId())).orElse(null);
+
+		if (rootCondition != null) {
+			return conditionService.evaluateCondition(rootCondition, getCurrentUserId());
 		}
 
 		try {
@@ -5691,7 +5723,8 @@ public class SimplePageBean {
 				}
 				LessonSubmission submission = assignment.getSubmission(getCurrentUserId());
 
-				if (submission == null || !submission.getUserSubmission()) {
+				if (assignment.getSubmissionType() != AssignmentEntity.NON_ELECTRONIC_ASSIGNMENT_SUBMISSION
+						&& (submission == null || BooleanUtils.isNotTrue(submission.getUserSubmission()))) {
 				    completeCache.put(itemId, false);
 				    return false;
 				}
@@ -5868,7 +5901,7 @@ public class SimplePageBean {
 				return requiredIndex >= currentIndex;
 			}
 		} else if (type == SimplePageItem.ASSIGNMENT) {
-			if (submission.getUserSubmission()) {
+			if (submission.getUserSubmission() || assEntity.getSubmissionType() == AssignmentEntity.NON_ELECTRONIC_ASSIGNMENT_SUBMISSION) {
 				if (submission.getGrade() != null) {
 					// assignment 2 uses gradebook, so we have a float value
 					// use some fuzz so 1.9999 is the same as 2
@@ -6666,11 +6699,11 @@ public class SimplePageBean {
 
 	public static final int MAXIMUM_ATTEMPTS_FOR_UNIQUENESS = 100;
 
-    // called by dialog to add inline multimedia item, or update existing
-    // item if itemid is specified
-    // NOTE: in a group-owned student page, the files are put in the home directory
-    // of the current user. That's the only consistent approach I could come up with
-    // this function uses a security advicor, so that will work.
+	// called by dialog to add inline multimedia item, or update existing
+	// item if itemid is specified
+	// NOTE: in a group-owned student page, the files are put in the home directory
+	// of the current user. That's the only consistent approach I could come up with
+	// this function uses a security advisor, so that will work.
 	public void addMultimedia() {
 
 	    // This code must be read together with the SimplePageItem.MULTIMEDIA
@@ -6678,22 +6711,22 @@ public class SimplePageBean {
 	    // multimediaDisplayType) and with the code in show-page.js that
 	    // handles the add multimedia dialog (look for #mm-add-item)
 
-				    // historically this code was to display files ,and urls leading to things
-				    // like MP4. as backup if we couldn't figure out what to do we'd put something
-				    // in an iframe. The one exception is youtube, which we supposed explicitly.
-				    //   However we now support several ways to embed content. We use the
-				    // multimediaDisplayType code to indicate which. The codes are
-				    // 	 1 -- embed code, 2 -- av type, 3 -- oembed, 4 -- iframe
-				    // 2 is the original code: MP4, image, and as a special case youtube urls
-				    // For all practical purposes type 2 is the same as the old items that don't
-	                            // have type codes (although iframes are also handled by the old code)
-				    //    the old code creates ojbects in ContentHosting for both files and URLs.
-				    // The new code saves the embed code or URL itself as an atteibute of the item
-				    // If I were doing it again, I wouldn't create the ContebtHosting item
-				    //   Note that IFRAME is only used for something where the far end claims the MIME
-				    // type is HTML. For weird stuff like MS Word files I use the file display code, which
-	                            //   ShowPageProducer figures out how to display type 2 (or default) items 
-	                            // on the fly, so we don't have to known here what they are.
+		// historically this code was to display files ,and urls leading to things
+		// like MP4. as backup if we couldn't figure out what to do we'd put something
+		// in an iframe. The one exception is youtube, which we supposed explicitly.
+		// However we now support several ways to embed content. We use the
+		// multimediaDisplayType code to indicate which. The codes are
+		// 	 1 -- embed code, 2 -- av type, 3 -- oembed, 4 -- iframe
+		// 2 is the original code: MP4, image, and as a special case youtube urls
+		// For all practical purposes type 2 is the same as the old items that don't
+		// have type codes (although iframes are also handled by the old code)
+		// the old code creates ojbects in ContentHosting for both files and URLs.
+		// The new code saves the embed code or URL itself as an atteibute of the item
+		// If I were doing it again, I wouldn't create the ContebtHosting item
+		// Note that IFRAME is only used for something where the far end claims the MIME
+		// type is HTML. For weird stuff like MS Word files I use the file display code, which
+		// ShowPageProducer figures out how to display type 2 (or default) items 
+		// on the fly, so we don't have to known here what they are.
 
 		SecurityAdvisor advisor = null;
 		try {
@@ -6716,13 +6749,15 @@ public class SimplePageBean {
 				if (names.length() > 0)
 				    fnames = names.split("\n");
 				int fileindex = 0;
-				for(MultipartFile file : multipartMap.values()){
-					if (file.isEmpty())
+				for (MultipartFile file : multipartMap.values()) {
+					if (file.isEmpty()) {
 						file = null;
+					}
 					// for file uploads only, name is in names rather than name
 					String fname = name;
-					if (fnames.length > fileindex)
+					if (fnames.length > fileindex) {
 					    fname = fnames[fileindex].trim();
+					}
 					name = null;  // don't reuse name
 					addMultimediaFile(file, fname);
 					fileindex++;
@@ -6853,7 +6888,7 @@ public class SimplePageBean {
 				if (name.length() > 80)
 				    name = name.substring(0,39) + "..." + name.substring(name.length()-39);
 				// as far as I can see, this is used only to find the extension, so this is OK
-				sakaiId = "/url/" + name;
+				sakaiId = PREFIX_URL + name;
 
 				urlResource = url;
 				// new dialog passes the mime type
@@ -6871,9 +6906,9 @@ public class SimplePageBean {
 			// 	itemId tells us whether it's an existing item
 			// 	isMultimedia tells us whether resource or multimedia
 			// 	sameWindow is only passed for existing items of type HTML/XHTML
-			//   	for new items it should be set true for HTML/XTML, false otherwise
-			//   	for existing items it should be set to the passed value for HTML/XMTL, false otherwise
-			//   	it is ignored for isMultimedia, as those are always displayed inline in the current page
+			//  for new items it should be set true for HTML/XTML, false otherwise
+			//  for existing items it should be set to the passed value for HTML/XMTL, false otherwise
+			//  it is ignored for isMultimedia, as those are always displayed inline in the current page
 			
 			SimplePageItem item;
 			if (itemId == -1 && isMultimedia) {
@@ -6971,7 +7006,7 @@ public class SimplePageBean {
 	public String sakaiIdFromUrl(String url, SimplePageItem item) {
 	    if (url.length() > 80)
 		url = url.substring(url.length()-80);
-	    return "/url/" + item.getId() + "/" + url;
+	    return PREFIX_URL + item.getId() + "/" + url;
 	}
 
 	public boolean deleteRecursive(File path) throws FileNotFoundException{
@@ -6997,7 +7032,7 @@ public class SimplePageBean {
 
                 // Retrieve the tool associated with the content item
                 String toolId = ToolUtils.getRequestParameter("toolId");
-                Long toolKey = SakaiBLTIUtil.getLongNull(toolId);
+                Long toolKey = SakaiLTIUtil.getLongNull(toolId);
                 if ( toolKey == 0 || toolKey < 0 ) {
                         setErrKey("simplepage.lti-import-error-id", toolId);
                         return;
@@ -7072,6 +7107,7 @@ public class SimplePageBean {
 		try {
 		    cc = File.createTempFile("ccloader", "file");
 		    root = File.createTempFile("ccloader", "root");
+            log.debug("cc = {} root={}", cc.getAbsoluteFile(), root.getAbsoluteFile());
 		    if (root.exists()) {
 			if (!root.delete()) {
 			    setErrMessage("unable to delete temp file for load");
@@ -7098,6 +7134,27 @@ public class SimplePageBean {
 		    bos.close();
 
 		    CartridgeLoader cartridgeLoader = ZipLoader.getUtilities(cc, root.getCanonicalPath());
+
+		    // Force the unzip to happen as it would have happened anyways
+			if ( importArchive ) {
+				log.debug("checking for embedded site archive");
+				cartridgeLoader.unzip();
+				String unzipPath = cartridgeLoader.getUnzipPath();
+
+				log.debug("unzipPath={}", unzipPath);
+
+				// Check if this is a CC + sakai_archive
+				String archivePath = unzipPath + "/sakai_archive/";
+				File archive = new File(archivePath);
+				if ( archive.isDirectory() ) {
+					String userId = userDirectoryService.getCurrentUser().getId();
+					String siteId = getCurrentSiteId();
+					log.debug("archive.merge( {}, {}, {})", archivePath, userId, siteId);
+					archiveService.merge(archivePath, siteId, userId);
+					return 0;
+				}
+			}
+
 		    Parser parser = Parser.createCartridgeParser(cartridgeLoader);
 
 		    LessonEntity quizobject = quizEntity;
@@ -7119,6 +7176,7 @@ public class SimplePageBean {
 			    topicobject = q;
 		    }
 
+		    log.debug("parser.parse {} {} {} {} {} {} {}", this, cartridgeLoader, simplePageToolDao, quizobject, topicobject, bltiEntity, assignobject);
 		    parser.parse(new PrintHandler(this, cartridgeLoader, simplePageToolDao, quizobject, topicobject, bltiEntity, assignobject, importtop));
 		} catch (Exception e) {
 		    setErrKey("simplepage.cc-error", "");
@@ -7454,7 +7512,7 @@ public class SimplePageBean {
 						} else {
 							try {
 								add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:comment:" + comment.getId(), null,
-									pageTitle + " Comments (item:" + comment.getId() + ")", Integer.valueOf(maxPoints), null, LESSONBUILDER_ID);
+									pageTitle + " Comments (item:" + comment.getId() + ")", Integer.valueOf(maxPoints), null, LessonBuilderConstants.TOOL_ID);
 							} catch(ConflictingAssignmentNameException cane) {
 								add = false;
 								setErrMessage(messageLocator.getMessage("simplepage.existing-gradebook"));
@@ -7714,7 +7772,17 @@ public class SimplePageBean {
 		
 		return map;
 	}
-	
+
+	private SecurityAdvisor siteUpdAdvisor = new SecurityAdvisor() {
+		public SecurityAdvice isAllowed(String userId, String function, String reference) {
+			if (function.equals(SiteService.SECURE_UPDATE_SITE) && reference.equals("/site/" + getCurrentSiteId())) {
+				return SecurityAdvice.ALLOWED;
+			} else {
+				return SecurityAdvice.PASS;
+			}
+		}
+	};
+
 	private SecurityAdvisor pushAdvisorAlways() {
 	    SecurityAdvisor alwaysAdvisor = new SecurityAdvisor() {
 		    public SecurityAdvice isAllowed(String userId, String function, String reference) {
@@ -7761,7 +7829,7 @@ public class SimplePageBean {
 		// so this should be safe.
 		if(questionAnswers == null) {
 			questionAnswers = new HashMap<>();
-			log.info("setAddAnswer: it was null");
+			log.debug("setAddAnswer: it was null");
 		}
 		
 		// We store with the index so that we can maintain the order
@@ -7868,7 +7936,7 @@ public class SimplePageBean {
 			}	
 
 			try {
-				boolean add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), gradebookId, null, title, pointsInt, null, LESSONBUILDER_ID);				
+				boolean add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), gradebookId, null, title, pointsInt, null, LessonBuilderConstants.TOOL_ID);
 				if(!add) {
 					setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
 				}else {
@@ -7910,6 +7978,22 @@ public class SimplePageBean {
 		String title = getPage(item.getPageId()).getTitle() + " - " + messageLocator.getMessage("simplepage.question-task-title");
                 // Dashboard task widget: When a question item is added create a task item for the site members.
 		createOrUpdateTask(reference, getCurrentSiteId(), title, null);
+
+		// Create a condition for every new question item
+		Long savedItemId = Long.valueOf(item.getId());
+		List<Condition> itemConditions = conditionService.getConditionsForItem(currentSiteId,
+				LessonBuilderConstants.TOOL_ID, savedItemId.toString());
+
+		if (itemConditions.isEmpty() && savedItemId >= 0) {
+			Condition itemCondition = Condition.builder()
+					.siteId(currentSiteId)
+					.toolId(LessonBuilderConstants.TOOL_ID)
+					.itemId(savedItemId.toString())
+					.type(ConditionType.COMPLETED)
+					.build();
+
+			conditionService.saveCondition(itemCondition);
+		}
 
 		if(questionType.equals("multipleChoice")) {
 			simplePageToolDao.syncQRTotals(item);
@@ -8181,7 +8265,7 @@ public class SimplePageBean {
 						add = gradebookIfc.updateExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, gradebookTitle, Integer.valueOf(maxPoints), null);
 					} else {
 						try {
-							add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, gradebookTitle, Integer.valueOf(maxPoints), null, LESSONBUILDER_ID);
+							add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, gradebookTitle, Integer.valueOf(maxPoints), null, LessonBuilderConstants.TOOL_ID);
 						} catch(ConflictingAssignmentNameException cane) {
 							add = false;
 							setErrMessage(messageLocator.getMessage("simplepage.existing-gradebook"));
@@ -8222,7 +8306,7 @@ public class SimplePageBean {
 					} else {
 					    try {
 							add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:page-comment:" + page.getId(), null,
-								title, points, null, LESSONBUILDER_ID);
+								title, points, null, LessonBuilderConstants.TOOL_ID);
 					    } catch(ConflictingAssignmentNameException cane) {
 							add = false;
 							setErrMessage(messageLocator.getMessage("simplepage.existing-gradebook"));
@@ -9408,4 +9492,16 @@ public class SimplePageBean {
 			return "permission-failed";
 		}
 	}
+
+	public List<Condition> getItemConditions() {
+		return itemOk(itemId)
+				? getItemConditions(findItem(itemId))
+				: Collections.emptyList();
+	}
+
+	public List<Condition> getItemConditions(SimplePageItem item) {
+		return conditionService.getConditionsForItem(currentSiteId,
+				LessonBuilderConstants.TOOL_ID, Long.valueOf(item.getId()).toString());
+	}
+
 }

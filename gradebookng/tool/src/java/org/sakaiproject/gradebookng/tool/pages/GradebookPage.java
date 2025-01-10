@@ -81,7 +81,6 @@ import org.sakaiproject.gradebookng.tool.panels.ToggleGradeItemsToolbarPanel;
 import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.grading.api.Assignment;
 import org.sakaiproject.grading.api.GraderPermission;
-import org.sakaiproject.grading.api.GradeType;
 import org.sakaiproject.grading.api.PermissionDefinition;
 import org.sakaiproject.grading.api.SortType;
 import org.sakaiproject.grading.api.model.Gradebook;
@@ -156,9 +155,13 @@ public class GradebookPage extends BasePage {
 			// no perms
 			this.permissions = this.businessService.getPermissionsForUser(this.currentUserUuid);
 			if (this.permissions.isEmpty()
-					|| (this.permissions.size() == 1 && StringUtils.equals(((PermissionDefinition) this.permissions.get(0)).getFunctionName(), GraderPermission.NONE.toString()))) {
+					|| (this.permissions.size() == 1 && StringUtils.equals(this.permissions.get(0).getFunctionName(), GraderPermission.NONE.toString()))) {
 				sendToAccessDeniedPage(getString("ta.nopermission"));
 			}
+		}
+		// This is not a Student or TA, so it is either custom role or an Instructor.
+		else if (!this.businessService.isUserAbleToEditAssessments()) {
+			sendToAccessDeniedPage(getString("ta.nopermission"));
 		}
 
 		final GbStopWatch stopwatch = new GbStopWatch();
@@ -168,7 +171,7 @@ public class GradebookPage extends BasePage {
 		this.form = new Form<>("form");
 		add(this.form);
 
-		this.form.add(new AttributeModifier("data-siteid", this.businessService.getCurrentSiteId()));
+		this.form.add(new AttributeModifier("data-site-id", this.businessService.getCurrentSiteId()));
 		this.form.add(new AttributeModifier("data-gradestimestamp", new Date().getTime()));
 
 		/**
@@ -176,7 +179,7 @@ public class GradebookPage extends BasePage {
 		 */
 		this.addOrEditGradeItemWindow = new GbModalWindow("addOrEditGradeItemWindow");
 		this.addOrEditGradeItemWindow.showUnloadConfirmation(false);
-		this.addOrEditGradeItemWindow.setCssClassName("modal-add-or-edit-gbitem");
+		this.addOrEditGradeItemWindow.setCssClassName("w_blue modal-add-or-edit-gbitem");
 		this.form.add(this.addOrEditGradeItemWindow);
 
 		this.studentGradeSummaryWindow = new GbModalWindow("studentGradeSummaryWindow");
@@ -245,9 +248,6 @@ public class GradebookPage extends BasePage {
 		this.hasStudents = !students.isEmpty();
 		// categories enabled?
 		final boolean categoriesEnabled = this.businessService.categoriesAreEnabled();
-
-		// grading type?
-		final GradeType gradingType = gradebook.getGradeType();
 
 		this.tableArea = new WebMarkupContainer("gradeTableArea");
 		if (!this.hasGradebookItems) {
@@ -325,15 +325,14 @@ public class GradebookPage extends BasePage {
 			@Override
 			protected void onInitialize() {
 				super.onInitialize();
-				if (settings.isGroupedByCategory()) {
-					add(new AttributeAppender("class", " on"));
-				}
+				String iconCssClass = settings.isGroupedByCategory() ? " si-check-square" : " si-empty-square";
+				add(new AttributeAppender("class", iconCssClass));
 				add(new AttributeModifier("aria-pressed", settings.isGroupedByCategory()));
 				setWillRenderOnClick(true);
 			}
 
 			@Override
-			public void onSubmit(AjaxRequestTarget target, Form<?> form) {
+			public void onSubmit(AjaxRequestTarget target) {
 				settings.setGroupedByCategory(!settings.isGroupedByCategory());
 				setUiSettings(settings, true);
 
@@ -349,7 +348,7 @@ public class GradebookPage extends BasePage {
 		toolbarColumnTools.add(toggleCategoriesToolbarItem);
 
 		// sort grade items button
-		final GbAjaxLink sortGradeItemsToolbarItem = new GbAjaxLink("sortGradeItemsToolbarItem") {
+		final GbAjaxLink<Void> sortGradeItemsToolbarItem = new GbAjaxLink<>("sortGradeItemsToolbarItem") {
 			@Override
 			public void onClick(final AjaxRequestTarget target) {
 				final GbModalWindow window = GradebookPage.this.getSortGradeItemsWindow();
@@ -372,7 +371,7 @@ public class GradebookPage extends BasePage {
 		toolbarColumnTools.add(sortGradeItemsToolbarItem);
 
 		// bulk edit items button
-		final GbAjaxLink bulkEditItemsToolbarItem = new GbAjaxLink("bulkEditItemsToolbarItem") {
+		final GbAjaxLink<Void> bulkEditItemsToolbarItem = new GbAjaxLink<>("bulkEditItemsToolbarItem") {
 			@Override
 			public void onClick(final AjaxRequestTarget target) {
 				final GbModalWindow window = GradebookPage.this.getBulkEditItemsWindow();
@@ -431,10 +430,10 @@ public class GradebookPage extends BasePage {
 					allGroupsTitle = getString("groups.available");
 				}
 			}
-			groups.add(0, new GbGroup(null, allGroupsTitle, null, GbGroup.Type.ALL));
+			groups.add(0, new GbGroup("allGroups", allGroupsTitle, null, GbGroup.Type.ALL));
 		}
 
-		final DropDownChoice<GbGroup> groupFilter = new DropDownChoice<GbGroup>("groupFilter", new Model<GbGroup>(),
+		final DropDownChoice<GbGroup> groupFilter = new DropDownChoice<>("groupFilter", new Model<>(),
 				groups, new ChoiceRenderer<GbGroup>() {
 					private static final long serialVersionUID = 1L;
 
@@ -447,14 +446,11 @@ public class GradebookPage extends BasePage {
 					public String getIdValue(final GbGroup g, final int index) {
 						return g.getId();
 					}
-
 				});
 
-		groupFilter.add(new AjaxFormComponentUpdatingBehavior("onchange") {
-
+		groupFilter.add(new AjaxFormComponentUpdatingBehavior("change") {
 			@Override
 			protected void onUpdate(final AjaxRequestTarget target) {
-
 				final GbGroup selected = (GbGroup) groupFilter.getDefaultModelObject();
 
 				// store selected group (null ok)
@@ -465,7 +461,6 @@ public class GradebookPage extends BasePage {
 				// refresh
 				setResponsePage(GradebookPage.class);
 			}
-
 		});
 
 		// set selected group, or first item in list
@@ -573,7 +568,7 @@ public class GradebookPage extends BasePage {
 		// See if the user has a database-persisted preference for Group by Category
 		String userGbUiCatPref = this.businessService.getUserGbPreference("GROUP_BY_CAT");
 		if (StringUtils.isNotBlank(userGbUiCatPref)) {
-			settings.setGroupedByCategory(Boolean.valueOf(userGbUiCatPref));
+			settings.setGroupedByCategory(Boolean.parseBoolean(userGbUiCatPref));
 		}
  
 		return settings;
@@ -661,12 +656,8 @@ public class GradebookPage extends BasePage {
 			super(id);
 		}
 
-		public GbAddButton(final String id, final Form<?> form) {
-			super(id, form);
-		}
-
 		@Override
-		public void onSubmit(final AjaxRequestTarget target, final Form form) {
+		public void onSubmit(final AjaxRequestTarget target) {
 			final GbModalWindow window = getAddOrEditGradeItemWindow();
 			window.setTitle(getString("heading.addgradeitem"));
 			window.setComponentToReturnFocusTo(this);

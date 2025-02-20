@@ -42,7 +42,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.context.MessageSource;
 
 import org.sakaiproject.lti.api.LTIService;
-import org.sakaiproject.basiclti.util.SakaiBLTIUtil;
+import org.sakaiproject.lti.util.SakaiLTIUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -160,8 +160,6 @@ public class MainController {
 			editTenant.setRealmTemplate(tenant.getRealmTemplate());
 			editTenant.setInboundRoleMap(tenant.getInboundRoleMap());
 			editTenant.setTimeZone(tenant.getTimeZone());
-			editTenant.setAllowedTools(tenant.getAllowedTools());
-			editTenant.setNewWindowTools(tenant.getNewWindowTools());
 			editTenant.setVerbose(tenant.getVerbose());
 			editTenant.setOidcAuth(tenant.getOidcAuth());
 			editTenant.setOidcKeySet(tenant.getOidcKeySet());
@@ -349,7 +347,7 @@ public class MainController {
 		model.addAttribute("siteId", placement.getContext());
 		String baseUrl = "/portal/site/" + placement.getContext() + "/tool/" + toolManager.getCurrentPlacement().getId();
 		model.addAttribute("baseUrl", baseUrl);
-		String serverUrl = SakaiBLTIUtil.getOurServerUrl();
+		String serverUrl = SakaiLTIUtil.getOurServerUrl();
 		model.addAttribute("serverUrl", serverUrl);
 		model.addAttribute("sakaiHtmlHead", (String) request.getAttribute("sakai.html.head"));
 	}

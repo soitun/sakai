@@ -55,8 +55,6 @@
 		<!-- new events tracked for Sakai 20 -->
 		<event eventId="asn.read.assignment" selected="true" resolvable="true"/>
 		<event eventId="asn.read.submission" selected="true" resolvable="true"/>
-		<event eventId="asn.resubmit.assignment" selected="true"/>
-		<event eventId="asn.resubmit.submission" selected="true"/>
 		<!-- Formats: /assignment/a/<context>/<id>, /assignment/s/<context>/<container>/<id>,
 		 /assignment/s/<context>/<id> (unlikely), /assignment/submissions/<context>/<id> (unlikely)-->
 		<!-- possibly other formats ...-->
@@ -131,8 +129,12 @@
 
     <tool toolId="sakai.conversations" selected="true">
 		<event eventId="conversations.topic.created" selected="true"/>
-		<event eventId="conversations.post.created" selected="true"/>
+		<event eventId="conversations.topic.upvoted" selected="true"/>
 		<event eventId="conversations.topic.reacted" selected="true"/>
+		<event eventId="conversations.post.created" selected="true"/>
+		<event eventId="conversations.post.viewed" selected="true"/>
+		<event eventId="conversations.post.upvoted" selected="true"/>
+		<event eventId="conversations.post.reacted" selected="true"/>
 	</tool>
 
 	<!-- lessons -->
@@ -317,6 +319,7 @@
 		<event eventId="content.read" selected="true" resolvable="true"/>
 		<event eventId="content.revise" selected="true" resolvable="true"/>
 		<event eventId="content.delete" selected="true" resolvable="true"/>
+		<event eventId="content.zipdownload" selected="true" resolvable="true"/>
 		<!-- Format: varies, but generally conforms to:
 		/content/<content_reference> where <content_reference> typically contains <site_id> -->
 		<eventParserTip for="contextId" separator="/" index="3"/>

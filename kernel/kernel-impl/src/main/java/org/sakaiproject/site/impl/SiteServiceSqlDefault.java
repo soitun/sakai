@@ -28,6 +28,8 @@ import org.sakaiproject.site.api.SiteService.SelectionType.PublishedFilter;
  */
 public class SiteServiceSqlDefault implements SiteServiceSql
 {
+	public static final int TITLE_MAX_LENGTH = 99;
+
 	/**
 	 * returns the sql statement which deletes the groups for a given site from the sakai_site_group table.
 	 */
@@ -371,7 +373,7 @@ public class SiteServiceSqlDefault implements SiteServiceSql
 	 */
 	public String getSitesWhere9Sql()
 	{
-		return "UPPER(SAKAI_SITE.TITLE) like UPPER(?) and ";
+		return "(UPPER(SAKAI_SITE.TITLE) like UPPER(?) OR UPPER(SAKAI_SITE.SITE_ID) like UPPER(?)) and ";
 	}
 
 	/**

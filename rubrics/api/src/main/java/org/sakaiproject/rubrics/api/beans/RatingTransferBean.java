@@ -20,6 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Data
 @NoArgsConstructor
 public class RatingTransferBean {
@@ -28,13 +30,16 @@ public class RatingTransferBean {
     private Long criterionId;
     private String description;
     private Double points;
+    private Double weightedPoints;
     private String title;
 
     public RatingTransferBean(Rating rating) {
+        Objects.requireNonNull(rating, "rating must not be null in constructor");
         id = rating.getId();
         criterionId = rating.getCriterion().getId();
         description = rating.getDescription();
         points = rating.getPoints();
+        weightedPoints = 0D;
         title = rating.getTitle();
     }
 }

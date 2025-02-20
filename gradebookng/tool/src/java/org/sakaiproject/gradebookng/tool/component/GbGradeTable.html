@@ -1,15 +1,14 @@
 <html>
     <wicket:panel xmlns:wicket="http://wicket.apache.org">
-        <script wicket:id="messagerScript"></script>
-        <script wicket:id="userPhotoScript"></script>
+        <script type="module" wicket:id="messagerScript"></script>
         <div id="gradeTableWrapper">
             <div wicket:id="gradeTable" id="gradeTable" accesskey="g" wicket:message="aria-label:gradetable.wrapper.tooltip" aria-describedby="gradeTableCaption"></div>
         </div>
 
         <script id="courseGradeHeaderTemplate" type="text/template">
-            <span class="colHeader d-none" data-col-index="${col}">${col}</span>
+            <span class="colHeader d-none"></span>
             <div class="relative">
-                <a class="gb-title">
+                <a class="gb-title d-block overflow-hidden text-truncate" wicket:message="title:sortbygrade,aria-label:sortbygrade">
                     <wicket:message key="column.header.coursegrade"/>
                 </a>
                 <div class="gb-title gb-grade-item-flags">
@@ -36,16 +35,17 @@
                     {/if}
                 </div>
                 {if settings.isUserAbleToEditAssessments}
-                    <div class="dropdown">
+                    <div class="dropdown dropend position-absolute top-0 end-0">
                         <button type="button"
-                            class="btn btn-sm btn-default dropdown-toggle"
+                            class="btn btn-sm btn-default bi bi-gear-fill dropdown-toggle"
                             data-bs-toggle="dropdown"
+                            data-bs-popper-config='{"strategy": "fixed"}'
                             aria-haspopup="true"
                             aria-expanded="false"
                             wicket:message="title:coursegrade.header.menulabel"
                             tabindex="-1">
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-right">
+                        <ul class="dropdown-menu">
                             {if settings.isSetUngradedToZeroEnabled}
                                 <li><a href="javascript:void(0);" class="gb-set-zero-score dropdown-item"><wicket:message key="coursegrade.option.setungraded" /></a></li>
                             {/if}
@@ -68,7 +68,7 @@
             </div>
         </script>
         <script id="assignmentHeaderTemplate" type="text/template">
-            <span class="colHeader d-none" data-col-index="${col}">${col}</span>
+            <span class="colHeader d-none"></span>
             <div class="relative">
                 {if extraCredit}
                     <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracredit"></span>
@@ -78,16 +78,17 @@
                           wicket:message="title:label.gradeitem.externalapplabel">
                     </span>
                 {/if}
-                {var tooltip = title.replace(/"/g, '&quot;')}
-                <a class="gb-title" title="${tooltip}">
-                    ${abbrevTitle}
+                <div class="{if extraCredit && externallyMaintained} gb-item-title-3 {elseif extraCredit || externallyMaintained} gb-item-title-2 {else} gb-item-title-1 {/if} d-inline-block overflow-hidden text-truncate">
+                    <a class="gb-title" title="${tooltip}">
+                        ${abbrevTitle}
+                    </a>
                     {if hasAssociatedRubric}
-                        <span class="fa fa-fw icon-sakai--sakai-rubrics" wicket:message="title:rubrics.question_use_rubric"></span>
+                        <span class="si si-sakai-rubrics" wicket:message="title:rubrics.question_use_rubric"></span>
                     {/if}
-                </a>
+                </div>
                 {if settings.isCategoriesEnabled}
                     {if categoryId}
-                        <div class="gb-category">
+                        <div class="gb-category overflow-hidden text-truncate">
                             <wicket:message key="label.category"/>
                             {if categoryExtraCredit}
                                 <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracreditcategory"></span>
@@ -95,18 +96,18 @@
                             {if categoryEqualWeight}
                                 <span class="gb-flag-equal-weight" wicket:message="title:label.gradeitem.equalweightcategory"></span>
                             {/if}
-                            <span>${categoryName}</span>
+                            <span title="${categoryName}">${categoryName}</span>
                             {if settings.isCategoryTypeWeighted}
                                 <span class="gb-category-weight">[${categoryWeight}]</span>
                             {/if}
                         </div>
                     {else}
-                        <div class="gb-uncategorized">
+                        <div class="gb-uncategorized overflow-hidden text-truncate">
                             <wicket:message key="gradebookpage.uncategorised"/>
                         </div>
                     {/if}
                 {/if}
-                <div class="gb-grade-section">
+                <div class="gb-grade-section overflow-hidden text-truncate">
                     {if settings.isPercentageGradeEntry}
                         <wicket:message key="label.relativeweight"/>
                     {else}
@@ -116,7 +117,7 @@
                         ${points}
                     </span>
                 </div>
-                <div class="gb-due-date">
+                <div class="gb-due-date overflow-hidden text-truncate">
                     <wicket:message key="label.due"/> 
                     <span>${dueDate}</span>
                 </div>
@@ -132,14 +133,16 @@
                         <span class="gb-flag-not-released" wicket:message="title:label.gradeitem.notreleased"></span>
                     {/if}
                 </div>
-                <div class="dropdown">
+                <div class="dropdown dropend position-absolute top-0 end-0">
                     <button type="button"
-                            class="btn btn-sm btn-default dropdown-toggle"
+                            class="btn btn-sm btn-default bi bi-gear-fill dropdown-toggle"
                             data-bs-toggle="dropdown"
+                            data-bs-popper-config='{"strategy": "fixed"}'
                             aria-haspopup="true"
-                            aria-expanded="false">
+                            aria-expanded="false"
+                            tabindex="-1">
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-right">
+                    <ul class="dropdown-menu">
                         {if settings.isUserAbleToEditAssessments}
                             <li><a href="javascript:void(0);" class="edit-assignment-details dropdown-item"><wicket:message key="assignment.option.edit" /></a></li>
                             <li><a href="javascript:void(0);" class="gb-quick-entry dropdown-item"><wicket:message key="link.quickentry" /></a></li>
@@ -168,7 +171,7 @@
             </div>
         </script>
         <script id="categoryScoreHeaderTemplate" type="text/template">
-            <span class="colHeader hide" data-col-index="${col}">${col}</span>
+            <span class="colHeader d-none"></span>
             <div class="relative">
                 {if getExtraCredit}
                     <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracreditcategory"></span>
@@ -176,13 +179,12 @@
                 {if equalWeight}
                     <span class="gb-flag-equal-weight" wicket:message="title:label.gradeitem.equalweightcategory"></span>
                 {/if}
-                {var tooltip = title.replace(/"/g, '&quot;')}
-                <a class="gb-title" title="${tooltip}">
+                <a class="gb-title {if getExtraCredit && equalWeight} gb-category-title-3 {elseif getExtraCredit || equalWeight} gb-category-title-2 {else} gb-category-title-1 {/if} d-block overflow-hidden text-truncate" title="${tooltip}">
                     <span class="gb-category">
                         <span class="swatch" style="background-color: #${color}"></span>
                         ${categoryName}
                         {if settings.isCategoryTypeWeighted}
-                            <div class="gb-category-weight-label">
+                            <div class="gb-category-weight-label overflow-hidden text-truncate">
                                 <wicket:message key="label.gradeitem.categoryaveragelabel"/>
                                 <span class="gb-category-weight" wicket:message="title:label.gradeitem.categoryweight">
                                     [${weight}]
@@ -191,7 +193,7 @@
                         {/if}
                     </span>
                 </a>
-                <div class="gb-grade-section gb-category-points-section">
+                <div class="gb-grade-section gb-category-points-section overflow-hidden text-truncate">
                     {if settings.isPercentageGradeEntry}
                         <wicket:message key="label.relativeweight"/>
                     {else}
@@ -202,17 +204,18 @@
                     </span>
                 </div>	
                 {for info in dropInfo}
-                <div class="gb-drop-info">${info}</div>
+                <div class="gb-drop-info overflow-hidden text-truncate">${info}</div>
                 {/for}
-                <div class="btn-group">
+                <div class="dropdown dropend position-absolute top-0 end-0">
                     <button type="button"
-                        class="btn btn-sm btn-default dropdown-toggle"
+                        class="btn btn-sm btn-default bi bi-gear-fill dropdown-toggle"
                         data-bs-toggle="dropdown"
+                        data-bs-popper-config='{"strategy": "fixed"}'
                         aria-expanded="false"
                         aria-haspopup="true"
                         tabindex="-1">
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-right">
+                    <ul class="dropdown-menu">
                         <li><a class="gb-hide-column dropdown-item" data-categoryid="${categoryId}"><wicket:message key="assignment.option.hide" /></a></li>
                     </ul>
                 </div>
@@ -220,20 +223,21 @@
         </script>
         <script id="studentHeaderTemplate" type="text/template">
             <div class="relative">
-                <div class="colHeader" data-col-index="${col}">
-                    <a class="gb-title">
+                <div class="colHeader">
+                    <a class="gb-title d-block overflow-hidden text-truncate" wicket:message="title:sortbyname,aria-label:sortbyname">
                         <wicket:message key="column.header.students"/>
                     </a>
-                    <div class="dropdown">
+                    <div class="dropdown dropend position-absolute top-0 end-0">
                         <button type="button"
-                            class="btn btn-sm btn-default dropdown-toggle"
+                            class="btn btn-sm btn-default bi bi-gear-fill dropdown-toggle"
                             data-bs-toggle="dropdown"
+                            data-bs-popper="static"
                             aria-haspopup="true"
                             aria-expanded="false"
                             wicket:message="title:students.menulabel"
                             tabindex="-1">
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-right">
+                        <ul class="dropdown-menu" data-bs-popper="static" data-bs-placement="left-start">
                             {if !settings.isStudentOrderedByLastName}
                                 <li><a class="gb-student-name-order-toggle dropdown-item" data-order-by="last_name" href="#"><wicket:message key="sortbyname.option.last"/></a></li>
                             {/if}
@@ -247,8 +251,8 @@
         </script>
         <script id="studentNumberHeaderTemplate" type="text/template">
             <div class="relative">
-                <div class="colHeader" data-col-index="${col}">
-                    <a class="gb-title">
+                <div class="colHeader">
+                    <a class="gb-title" wicket:message="title:label.gradeitem.studentnumberheadertooltip,aria-label:label.gradeitem.studentnumberheadertooltip">
                         <wicket:message key="column.header.studentNumber"/>
                     </a>
                 </div>
@@ -256,7 +260,7 @@
         </script>
         <script id="studentNumberCellTemplate" type="text/template">
             <div class="relative gb-student-number-cell">
-                <div class="gb-value">
+                <div class="gb-value d-flex mt-3 justify-content-center">
                     <div class="rowHeader">
                         ${studentNumber}
                     </div>
@@ -265,22 +269,23 @@
         </script>
         <script id="sectionsHeaderTemplate" type="text/template">
             <div class="relative">
-                <div class="colHeader" data-col-index="${col}">
-                    <a class="gb-title">
+                <div class="colHeader">
+                    <a class="gb-title" wicket:message="title:label.gradeitem.sectionsheadertooltip,aria-label:label.gradeitem.sectionsheadertooltip">
                         <wicket:message key="column.header.sections"/>
                     </a>
                 </div>
             </div>
         </script>
         <script id="sectionsCellTemplate" type="text/template">
-            <div class="gb-value gb-section-cell">
+            <div class="gb-value d-flex mt-3 justify-content-center gb-section-cell">
               {if sections.length > 0}
               <div class="dropdown">
                 <button type="button"
-                    class="btn btn-secondary dropdown-toggle gb-section-button"
+                    class="btn btn-secondary gb-section-button dropdown-toggle"
                     title="${sections[0]}"
                     id="dropdownMenuButton"
                     data-bs-toggle="dropdown"
+                    data-bs-popper-config='{"strategy": "fixed"}'
                     aria-haspopup="true"
                     aria-expanded="false">
                   ${sections[0]}
@@ -298,19 +303,22 @@
         </script>
         <script id="cellTemplate" type="text/template">
             <div class="relative">
-                <span class="gb-value">${value}</span>
+                <div class="gb-editable">
+                    <span class="gb-value d-flex mt-3 justify-content-center">${value}</span>
+                </div>
                 <span class="gb-notification"></span>
-                <span class="gb-comment-notification"></span>
-                <div class="btn-group">
+                <span class="gb-comment-notification bi bi-chat-right-dots position-absolute bottom-0 end-0 mx-2"></span>
+                <div class="btn-group dropend position-absolute top-0 end-0">
                     <button type="button"
-                        class="btn btn-sm btn-default dropdown-toggle"
+                        class="btn btn-sm btn-default si si-settings dropdown-toggle"
                         data-bs-toggle="dropdown"
+                        data-bs-popper-config='{"strategy": "fixed"}'
                         aria-haspopup="true"
                         aria-expanded="false"
                         tabindex="-1">
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-right">
-                        <li class="{if !hasAssociatedRubric} d-none {/if}"><a class="gb-grade-rubric dropdown-item" href="#"><wicket:message key="rubrics.option.graderubric" /></a></li>
+                    <ul class="dropdown-menu">
+                        <li class="gb-grade-rubric-li"><a class="gb-grade-rubric dropdown-item" href="#"><wicket:message key="rubrics.option.graderubric" /></a></li>
                         <li><a class="gb-view-log dropdown-item" href="#"><wicket:message key="grade.option.viewlog" /></a></li>
                         <li><a class="gb-edit-comments dropdown-item" href="#"><wicket:message key="comment.option.edit" /></a></li>
                         <li><a class="gb-excuse-grade dropdown-item" href="#"><wicket:message id="excuse-message" key="excuse.grade" /></a></li>
@@ -320,22 +328,23 @@
         </script>
         <script id="courseGradeCellTemplate" type="text/template">
             <div class="relative">
-                <span class="gb-value {if isOverridden} gb-overridden {/if}">
+                <span class="gb-value d-flex mt-3 justify-content-center {if isOverridden} gb-overridden {/if}">
                     ${value}
                 </span>
                 <span class="gb-notification"></span>
-                <span class="gb-course-comment-notification"></span>
+                <span class="gb-course-comment-notification bi bi-chat-right-dots position-absolute bottom-0 end-0 mx-2"></span>
                 {if GbGradeTable.settings.isUserAbleToEditAssessments}
-                    <div class="btn-group">
+                    <div class="btn-group dropend position-absolute top-0 end-0">
                         <button type="button"
-                            class="btn btn-sm btn-default dropdown-toggle"
+                            class="btn btn-sm btn-default si si-settings dropdown-toggle"
                             data-bs-toggle="dropdown"
+                            data-bs-popper-config='{"strategy": "fixed"}'
                             aria-haspopup="true"
                             aria-expanded="false"
                             wicket:message="title:coursegrade.cell.menulabel"
                             tabindex="-1">
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-right">
+                        <ul class="dropdown-menu">
                             <li><a class="gb-edit-course-grade-comments dropdown-item" href="#" role="menuitem"><wicket:message key="comment.option.edit" /></a></li>
                             <li><a href="javascript:void(0);" class="gb-course-grade-override dropdown-item"><wicket:message key="coursegrade.option.override"/></a></li>
                             <li><a href="javascript:void(0);" class="gb-course-grade-override-log dropdown-item"><wicket:message key="coursegrade.option.overridelog"/></a></li>

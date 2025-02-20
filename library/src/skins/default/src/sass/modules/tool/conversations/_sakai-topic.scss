@@ -25,26 +25,9 @@
     margin-bottom: 20px;
   }
 
-  .topic-creator-name, .post-creator-name {
-    font-weight: bold;
-    font-size: 14px;
-    line-height: 24px;
-    color: var(--sakai-text-color);
-  }
-
-  .topic-created-date, .post-created-date, .topic-question-asked {
-    font-size: 14px;
-    line-height: 24px;
-  }
-
   .topic-question-asked {
     margin: 0 5px 0 5px;
   }
-
-  .post-created-date {
-    margin-left: 5px;
-  }
-
 
   .topic-title-and-status {
     display: grid;
@@ -104,68 +87,15 @@
     padding: 4px;
   }
 
-  .topic-option a {
-    //text-decoration: none;
-  }
-
-  .good-question-on {
-    background: #D4EBF9;
-    border-radius: 2px;
-  }
   .topic-message-bottom-bar a {
     text-decoration: none;
     display: block;
   }
-  .topic-reactions-popup {
-    display: flex;
-    align-items: center;
-    background: #FFFFFF;
-    border-radius: 8px;
-    border: 1px solid var(--sakai-border-color);
-    padding: 5px;
-  }
 
-  .topic-reactions-popup > div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 7px 0 7px;
-    width: 16px;
-    height: 16px;
+  button.dropdown-item > div {
+    display: inline-block;
+    pointer-events: none;
     padding: 4px;
-    padding-top: 7px;
-  }
-
-  .topic-reactions-popup sakai-icon {
-    pointer-events: auto;
-  }
-
-  .reaction-on {
-    background: var(--sakai-background-color);
-    border-radius: 2px;
-  }
-
-  sakai-icon.heart {
-    color: blue;
-  }
-
-  sakai-icon.lightbulb {
-    color: #009933;
-  }
-
-  sakai-icon.key {
-    color: #ff3300;
-  }
-
-  .topic-message-reactions-bar {
-    display: grid;
-    grid-template-columns: min-content min-content min-content;
-    align-items: center;
-    gap: 6px;
-    font-weight: 500;
-    font-size: 12px;
-    text-transform: uppercase;
-    color: var(--sakai-text-color);
   }
 
   .topic-status {
@@ -174,20 +104,6 @@
 
   .topic-status sakai-icon {
       color: red;
-  }
-
-  .topic-message-reactions-bar > .topic-reaction {
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    padding: 4px;
-    background: var(--sakai-background-color-4);
-    border: 1px solid var(--sakai-border-color);
-    border-radius: 4px;
-  }
-
-  .topic-reaction > div:nth-child(2) {
-    margin-left: 8px;
   }
 
   .conv-post-editor-header {
@@ -215,7 +131,6 @@
   }
 
   .topic-reply-block {
-    //background: #F1F2F3;
     background: var(--tool-menu-background-color);
     position: sticky;
     top: $banner-height;
@@ -244,27 +159,11 @@
     color: red;
   }
 
-  .topic-title-wrapper {
-    display: flex;
-    font-size: 34px;
-    line-height: 40px;
-    color: var(--sakai-text-color);
-    align-items: center;
-    margin-right: 5px;
-  }
-
-  .topic-title {
-    font-weight: 300;
-  }
-
   .author-block {
     display: grid;
     grid-template-columns: min-content 1fr;
     gap: 10px;
     align-items: center;
-  }
-
-  .conv-post-editor-wrapper {
   }
 
   .conv-private-checkbox-block {

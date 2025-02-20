@@ -18,7 +18,7 @@
     text-align: center;
     vertical-align: middle;
   }
-  #gradeTableWrapper tbody th {
+  #gradeTableWrapper tbody .tabulator-col {
     text-align: left;
     vertical-align: middle;
   }
@@ -33,129 +33,112 @@
   #gradeTableWrapper .gb-student-number-cell .rowHeader {
     font-size: 12px;
   }
-  #gradeTableWrapper .handsontableInputHolder {
-    text-align: center;
+  #gradeTableWrapper .tabulator-editable.tabulator-editing {
+    border: 2px solid #007bff !important;
+    box-shadow: 0 0 5px rgba(157, 198, 243, 0.75);
   }
-  #gradeTableWrapper .handsontableInputHolder .out-of {
+  #gradeTableWrapper .tabulator-editing .gradebook-input .out-of {
     position: absolute;
     right: 2px;
     background-color: var(--sakai-background-color-2);
     font-size: 1em;
     color: var(--sakai-text-color-dimmed);
-    top: 2px;
+    top: 0px;
     border-left: 1px solid var(--sakai-border-color);
-    height: 28px;
+    height: 100%;
     line-height: 28px;
-    padding: 0 12px;
+    padding: 13px 12px;
+    margin-right: -1px;
   }
-  #gradeTableWrapper .handsontableInput {
+  #gradeTableWrapper .tabulator-input {
     line-height: 30px;
     text-align: center;
   }
-  #gradeTableWrapper .handsontable tr,
-  #gradeTableWrapper .handsontable th,
-  #gradeTableWrapper .handsontable td {
+  #gradeTableWrapper .tabulator-header,
+  #gradeTableWrapper .tabulator-tableholder,
+  #gradeTableWrapper .tabulator-row,
+  #gradeTableWrapper .tabulator-col,
+  #gradeTableWrapper .tabulator-cell {
     background: var(--sakai-background-color-1);
-  }
-  #gradeTableWrapper .handsontable tr > *:nth-child(1){
+    border-bottom: 1px solid var(--sakai-border-color);
+  }  
+  #gradeTableWrapper .tabulator-row > *:nth-child(1){
     text-align: left;
   }
-  #gradeTableWrapper .handsontable tbody tr > *:nth-child(1) .relative,
-  #gradeTableWrapper .handsontable tbody tr > *:nth-child(2) .relative {
-    padding: 2px 8px;
-  }
-  #gradeTableWrapper .handsontable tbody tr > *:nth-child(1) .relative .gb-value {
+  #gradeTableWrapper .tabulator-row .tabulator-cell:nth-child(1) .relative .gb-value {
     overflow: hidden;
-  }
-  /* right border for various number of fixed column options */
-  #gradeTableWrapper .handsontable.gb-fixed-columns-1 tr > *:nth-child(1),
-  #gradeTableWrapper .handsontable.gb-fixed-columns-2 tr > *:nth-child(2),
-  #gradeTableWrapper .handsontable.gb-fixed-columns-3 tr > *:nth-child(3),
-  #gradeTableWrapper .handsontable.gb-fixed-columns-4 tr > *:nth-child(4),
-  #gradeTableWrapper .handsontable.gb-fixed-columns-5 tr > *:nth-child(5) {
+  }  
+  #gradeTableWrapper .tabulator.gb-fixed-columns-1 .tabulator-row .tabulator-cell:nth-child(1),
+  #gradeTableWrapper .tabulator.gb-fixed-columns-2 .tabulator-row .tabulator-cell:nth-child(2),
+  #gradeTableWrapper .tabulator.gb-fixed-columns-3 .tabulator-row .tabulator-cell:nth-child(3),
+  #gradeTableWrapper .tabulator.gb-fixed-columns-4 .tabulator-row .tabulator-cell:nth-child(4),
+  #gradeTableWrapper .tabulator.gb-fixed-columns-5 .tabulator-row .tabulator-cell:nth-child(5) {
     border-right: 1px solid var(--sakai-border-color);
   }
-  #gradeTableWrapper .handsontable thead th {
-    color: var(--sakai-text-color-2);
-    border-bottom: 1px solid var(--sakai-border-color);
-  }
-  #gradeTableWrapper .handsontable tbody tr:nth-child(2n) td,
-  #gradeTableWrapper .handsontable tbody tr:nth-child(2n) td .relative {
-      background: var(--sakai-background-color-2);
-  }
-  #gradeTableWrapper .handsontable th,
-  #gradeTableWrapper .handsontable td {
-    border-color: var(--sakai-border-color);
-    padding: 0;
-  }
-  #gradeTableWrapper .handsontable th > .relative,
-  #gradeTableWrapper .handsontable td > .relative {
-    padding: 4px;
-  }
-  #gradeTableWrapper .handsontable th > .relative > * {
-    white-space: normal;
-  }
-  #gradeTableWrapper .handsontable th {
-    background-color: var(--sakai-background-color-2);
-    height: 102px;
-  }
 
-  #gradeTableWrapper thead th {
+#gradeTableWrapper .tabulator-headers .tabulator-col {
+  color: var(--sakai-text-color-2);
+  border-bottom: 1px solid var(--sakai-border-color);
+  background-color: var(--sakai-background-color-2);
+  height: 102px;
+}
+
+#gradeTableWrapper .tabulator-cell {
+  color: var(--sakai-text-color-1);
+}
+
+#gradeTableWrapper .tabulator-row:nth-child(even) .tabulator-cell {
+  background: var(--sakai-background-color-2);
+}
+
+#gradeTableWrapper .tabulator-cell,
+#gradeTableWrapper .tabulator-headers .tabulator-col .tabulator-row {
+  border-color: var(--sakai-border-color);
+  padding: 0;
+}
+
+#gradeTableWrapper .tabulator .tabulator-cell .relative,
+#gradeTableWrapper .tabulator .tabulator-headers .tabulator-col .relative {
+  padding: 4px;
+}
+
+#gradeTableWrapper .tabulator .tabulator-headers .tabulator-col .relative > * {
+  white-space: nowrap;
+}
+
+
+  #gradeTableWrapper .tabulator-headers .tabulator-col {
     text-align: left;
   }
-  #gradeTableWrapper thead th .relative {
+  #gradeTableWrapper .tabulator-headers .tabulator-col .relative {
     height: 100%;
-  }
-  #gradeTableWrapper tbody td .relative {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 32px;
-  }
-  #gradeTableWrapper tbody td .gb-student-cell {
-    justify-content: flex-start;
-  }
-  #gradeTableWrapper tbody td .gb-student-cell .gb-value {
-    line-height: 1.2em;
-  }
-  #gradeTableWrapper tbody td .gb-student-cell .gb-view-grade-summary {
-    display: block;
-    font-weight: normal;
   }
   #gradeTableWrapper .relative {
     border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
   }
-  #gradeTableWrapper .currentRow .relative {
-    border-top: 1px solid var(--sakai-active-color-1);
-    border-bottom: 1px solid var(--sakai-active-color-1);
-  }
 
-  #gradeTableWrapper .handsontable td {
+  #gradeTableWrapper .tabulator-cell {
     white-space: nowrap;
-  }
+  }  
   #gradeTableWrapper .gb-title {
     font-weight: bold;
-    white-space: normal;
     text-align: left;
     line-height: 1.2em;
-    display: inline-block;
     cursor: pointer;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   #gradeTableWrapper .gb-title.gb-sorted-asc:after {
     font-family: 'bootstrap-icons';
     content: '\F573';
     position: absolute;
-    right: 5px;
+    right: 1px;
     top: 5px;
   }
   #gradeTableWrapper .gb-title.gb-sorted-desc:after {
     font-family: 'bootstrap-icons';
     content: '\F571';
     position: absolute;
-    right: 5px;
+    right: 1px;
     top: 5px;
   }
   #gradeTableWrapper .gb-title .gb-category {
@@ -172,7 +155,8 @@
   #gradeTableWrapper .gb-grade-section,
   #gradeTableWrapper .gb-due-date,
   #gradeTableWrapper .gb-category,
-  #gradeTableWrapper .gb-drop-info {
+  #gradeTableWrapper .gb-drop-info,
+  #gradeTableWrapper .gb-uncategorized {
     text-align: left;
     font-size: 0.9em;
     line-height: 1.3em;
@@ -180,8 +164,8 @@
   #gradeTableWrapper .gb-grade-item-flags {
     display: inline;
   }
-  #gradeTableWrapper th .dropdown,
-  #gradeTableWrapper td .dropdown {
+  #gradeTableWrapper .tabulator-col .dropdown,
+  #gradeTableWrapper .tabulator-cell .dropdown {
     position: absolute;
     bottom: 5px;
     right: 5px;
@@ -192,8 +176,8 @@
     opacity: 0.2;
     border-color: var(--sakai-border-color);
   }
-  #gradeTableWrapper th:hover .btn-group > a,
-  #gradeTableWrapper td:hover .btn-group > a,
+  #gradeTableWrapper .tabulator-col:hover .btn-group > a,
+  #gradeTableWrapper .tabulator-cell:hover .btn-group > a,
   #gradeTableWrapper .highlight .btn-group > a {
     opacity: 1;
   }
@@ -203,8 +187,8 @@
     font-weight: inherit;
   }
 
-  #gradebookSpreadsheet.gb-grouped-by-category #gradeTableWrapper th.gb-categorized {
-    border-top: 10px solid var(--sakai-border-color);
+  #gradebookSpreadsheet.gb-grouped-by-category #gradeTableWrapper .tabulator-col.gb-categorized {
+    box-shadow: inset 0 5px 0 0 var(--sakai-border-color);
   }
   #gradeTableWrapper .swatch {
     width: 1em;
@@ -231,21 +215,7 @@
     position: absolute;
     right: 0;
     bottom: 2px;
-  }
-  #gradeTableWrapper .gb-comment-notification, #gradeTableWrapper .gb-course-comment-notification {
-    position: absolute;
-    top: 4px;
-    right: 8px;
-    font-size: 16px;
-    min-width: 16px;
-    height: 20px;
-    color: var(--sakai-text-color-dimmed);
-  }
-  #gradeTableWrapper .gb-comment-notification:before,
-  #gradeTableWrapper .gb-course-comment-notification:before,
-  .gb-flag-comment:before {
-    font-family: "bootstrap-icons";
-    content: '\F24B';
+    height: 12px;
   }
 
   #gradeTableWrapper .gb-notification {
@@ -277,8 +247,9 @@
     display: none;
   }
   #gradeTableWrapper .gb-extra-credit,
-  #gradeTableWrapper .currentRow .gb-extra-credit,
-  #gradeTableWrapper .currentCol .gb-extra-credit {
+  #gradeTableWrapper .tabulator-col .gb-extra-credit,
+  #gradeTableWrapper .tabulator-col .gb-extra-credit {
+    color:var(--sakai-color-gold--darker-5);
     background-color: var(--sakai-color-gold--lighter-5) !important;
   }
   .gb-flag-equal-weight:before {
@@ -296,7 +267,8 @@
   }
 
   .gb-flag-excused::before {
-    content: '\F4FC';
+    content: '\F1DF';
+    text-decoration-line: line-through;
   }
 
    .gb-flag-external:before {
@@ -305,28 +277,26 @@
   .gb-flag-read-only:before {
     content: '\F47A';
   }
-  #gradeTableWrapper th .gb-flag-equal-weight,
-  #gradeTableWrapper th .gb-flag-extra-credit,
-  #gradeTableWrapper th .gb-external-app {
+  #gradeTableWrapper .tabulator-col .gb-flag-equal-weight,
+  #gradeTableWrapper .tabulator-col .gb-flag-extra-credit,
+  #gradeTableWrapper .tabulator-col .gb-external-app {
     font-size: 1.1em;
     vertical-align: baseline;
     display: inline-block;
   }
-  #gradeTableWrapper th .relative > .gb-flag-equal-weight,
-  #gradeTableWrapper th .relative > .gb-flag-extra-credit,
-  #gradeTableWrapper th .relative > .gb-external-app {
+  #gradeTableWrapper .tabulator-col .relative > .gb-flag-equal-weight,
+  #gradeTableWrapper .tabulator-col .relative > .gb-flag-extra-credit,
+  #gradeTableWrapper .tabulator-col .relative > .gb-external-app {
     float: left;
     vertical-align: top;
     line-height: inherit;
     margin-right: 4px;
   }
-  #gradeTableWrapper th .gb-flag-equal-weight:before,
-  #gradeTableWrapper th .gb-flag-extra-credit:before {
+  #gradeTableWrapper .tabulator-col .gb-flag-equal-weight:before,
+  #gradeTableWrapper .tabulator-col .gb-flag-extra-credit:before {
     color: var(--sakai-text-color-dimmed);
   }
-  #gradeTableWrapper .gb-save-success,
-  #gradeTableWrapper .currentCol .gb-save-success,
-  #gradeTableWrapper .currentRow .gb-save-success {
+  #gradeTableWrapper .gb-save-success {
     background-color: var(--successBanner-bgcolor) !important;
   }
   #gradeTableWrapper .gb-save-success .gb-notification:before {
@@ -334,14 +304,12 @@
     content: "\F26A" !important;
     color: var(--successBanner-color);
   }
-  #gradeTableWrapper .gb-just-synced,
-  #gradeTableWrapper .currentCol .gb-just-synced,
-  #gradeTableWrapper .currentRow .gb-just-synced {
+  #gradeTableWrapper .gb-just-synced {
     background-color: var(--successBanner-bgcolor) !important;
   }
   #gradeTableWrapper .gb-save-error,
-  #gradeTableWrapper .currentCol .gb-save-error,
-  #gradeTableWrapper .currentRow .gb-save-error {
+  #gradeTableWrapper .tabulator-col .gb-save-error,
+  #gradeTableWrapper .tabulator-col .gb-save-error {
     background-color: var(--errorBanner-bgcolor) !important;
   }
   #gradeTableWrapper .gb-save-error .gb-notification:before,
@@ -385,13 +353,13 @@
     content: '\F4C9';
     color: var(--errorBanner-color);
   }
-  #gradeTableWrapper .handsontable tbody tr td .gb-dropped-grade-cell,
-  #gradeTableWrapper .handsontable tbody tr:nth-child(2n) td .gb-dropped-grade-cell,
-  #gradeTableWrapper .handsontable tbody tr:nth-child(2n) td .relative .gb-dropped-grade-cell {
+  #gradeTableWrapper .tabulator .tabulator-cell.gb-dropped-grade-cell,
+  #gradeTableWrapper .tabulator .tabulator-row:nth-child(2n) .tabulator-cell .gb-dropped-grade-cell,
+  #gradeTableWrapper .tabulator .tabulator-row:nth-child(2n) .tabulator-cell .relative .gb-dropped-grade-cell {
     background-image: repeating-linear-gradient(135deg, var(--sakai-background-color-2), var(--sakai-background-color-2) 5px, var(--sakai-background-color-1) 5px, var(--sakai-background-color-1) 10px);
     background-clip: padding-box;
   }
-  #gradeTableWrapper .handsontable tbody tr td .gb-dropped-grade-cell .gb-value {
+  #gradeTableWrapper .tabulator .tabulator-cell.gb-dropped-grade-cell .gb-value {
     text-decoration: line-through;
   }
 
@@ -528,15 +496,27 @@
     overflow: auto;
     clip: auto;
   }
-  .handsontable th {
-    overflow: visible; /* to allow visual cue to be rendered nicely */
+  #gradeTableWrapper .gb-item-title-1,
+  #gradeTableWrapper .gb-category-title-1 {
+    width: calc(100% - 11px);
   }
+  #gradeTableWrapper .gb-item-title-2,
+  #gradeTableWrapper .gb-category-title-2 {
+    width: calc(100% - 29px);
+  }
+  #gradeTableWrapper .gb-item-title-3,
+  #gradeTableWrapper .gb-category-title-3 {
+    width: calc(100% - 49px);
+  }
+  .tabulator .tabulator-header .tabulator-col {
+    overflow: visible; /* Allow content in header cells to overflow */
+  }  
   .gb-hidden-column-visual-cue {
     position: absolute;
-    top: 0;
-    right: -10px;
+    top: -6px;
+    right: -16px;
     cursor: pointer;
-    width: 19px;
+    width: 30px;
     border: 1px solid transparent;
     height: 15px;
     line-height: 14px;
@@ -553,70 +533,17 @@
     background-color: var(--sakai-background-color-1);
     border-color: var(--sakai-active-color-1);
   }
-  .gb-hidden-column-visual-cue:before {
-    font-family: 'bootstrap-icons';
-    content: '\F563';
-    float: left;
+  .bi-arrows-expand-vertical:before {
+    font-weight: bolder !important;
+    color: var(--bs-link-color);
   }
-  .gb-hidden-column-visual-cue:after {
-    font-family: 'bootstrap-icons';
-    content: '\F557';
-    float: right;
-  }
+
   .gb-category-average {
       background-color: var(--sakai-background-color-2);
   }
   .gb-category-average .gb-value {
       font-weight: bold;
       color: var(--sakai-text-color-2);
-  }
-
-  /* For Webkit browsers, force the scrollbars to be visible
-     (due to hidden scroll bars in OS X)
-  */
-  .ht_clone_left.handsontable {
-    height: calc(100% - 10px) !important;
-  }
-  .ht_clone_left.handsontable .wtHolder .wtHider {
-    padding-bottom: 10px;
-  }
-  .ht_clone_top.handsontable {
-    width: calc(100% - 10px) !important;
-  }
-  .ht_clone_top.handsontable .wtHolder .wtHider {
-    padding-right: 10px;
-  }
-  .wtHolder::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  .wtHolder::-webkit-scrollbar-track {
-    background-color: var(--sakai-background-color-3);
-  }
-  .wtHolder::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: var(--sakai-background-color-5);
-  }
-  .wtHolder::-webkit-scrollbar-thumb:hover {
-    background-color: var(--sakai-background-color-7);
-  }
-  /* drop z-index so they don't interfere with site menu dropdowns */
-  .ht_clone_top {
-    z-index: 96; /* was 101 */
-  }
-  .ht_clone_left {
-    z-index: 97; /* was 102 */
-  }
-  .ht_clone_top_left_corner,
-  .ht_clone_bottom_left_corner {
-    z-index: 98; /* was 103 */
-  }
-
-  /* We want the original table header to take up space, but it doesn't need to be
-     visible.  Otherwise we see it show up as a "ghost" in firefox when scrolling
-     upwards. */
-  .handsontable.ht_master thead {
-      visibility: hidden;
   }
   /* **************************************************************** *
    *                      Gradebook Grade comparison styles           *
@@ -737,25 +664,14 @@
     line-height: initial;
   }
   #toggleGradeItemsToolbarItem:after {
-    font-family: 'bootstrap-icons';
-    content: '\F282';
     font-size: 0.9em;
     margin-left: 6px
   }
-  #toggleGradeItemsToolbarItem.on:after {
-    content: '\F286';
-  }
   #toggleCategories:before,
   #toggleCategoriesToolbarItem:before {
-    font-family: 'bootstrap-icons';
-    content: '\F271';
     font-size: 15px;
     margin-right: 6px;
     vertical-align: middle;
-  }
-  #toggleCategories.on:before,
-  #toggleCategoriesToolbarItem.on:before {
-    content: '\f046';
   }
   #filterByGroup {
     line-height: 1em;
@@ -882,12 +798,6 @@
     border-bottom: none;
     margin: 0;
   }
-  #gradeItemsTogglePanel .gb-item-filter-group .btn-group {
-    padding-left: 5px;
-  }
-  #gradeItemsTogglePanel .gb-item-filter-group .btn-group .btn.dropdown-toggle {
-    padding: 0 4px;
-  }
   #gradeItemsTogglePanel .gb-item-filter .gb-show-this-item,
   #gradeItemsTogglePanel .gb-item-filter.off .gb-hide-this-item,
   #gradeItemsTogglePanel .gb-item-category-filter .gb-show-this-category,
@@ -982,168 +892,7 @@
   }
 
   /* Summary styles */
-  #instructorView.tab-pane,
-  #studentView.tab-pane {
-    border-top: 1px dotted var(--sakai-border-color);
-    margin-top: 20px;
-    padding-top: 20px;
-  }
-  .gb-summary-grade-score-outof {
-    color: var(--sakai-text-color-dimmed);
-  }
-  .gb-summary-grade-panel {
-    position: relative;
-  }
-  .gb-summary-grade-panel .gb-summary-category-row td:first-child {
-    font-weight: bold;
-  }
-  .gb-summary-grade-panel .gb-summary-grade-row td:first-child {
-    padding-left: 34px;
-  }
-  .gb-summary-grade-panel .gb-no-categories .gb-summary-grade-row td:first-child {
-    padding-left: 0;
-  }
-  .gb-summary-grade-duedate,
-  .gb-summary-grade-score,
-  .gb-summary-grade-weight,
-  .gb-summary-category-grade,
-  .gb-summary-category-weight {
-    text-align: center;
-  }
-  .gb-summary-grade-panel .gb-summary-course-grade {
-    margin: 0 0 10px 1px;
-  }
-  .gb-summary-grade-panel .gb-summary-course-grade .panel {
-    margin-bottom: 0;
-  }
-  .gb-summary-grade-panel .gb-summary-course-grade .panel-body {
-    padding: 8px 15px;
-  }
-  .gb-summary-grade-panel .gb-summary-course-grade-label {
-    padding-right: 10px;
-  }
-  .gb-summary-grade-panel .gb-summary-expand-all {
-    padding-right: 8px;
-  }
-  .gb-summary-grade-panel .gb-summary-category-toggle,
-  .gb-summary-grade-panel .gb-summary-category-toggle:hover,
-  .gb-summary-grade-panel .gb-summary-category-toggle:active {
-    text-decoration: none;
-    display: flex;
-    flex-grow: 2;
-  }
-  .gb-summary-grade-panel .gb-summary-category-toggle-container {
-    display: flex;
-    justify-content: space-between;
-  }
-  .gb-summary-grade-title {
-    font-weight: normal;
-  }
-
-  .gb-summary-grade-score sakai-rubric-student-button {
-      float: right;
-  }
-  .gb-summary-grade-panel .gb-summary-grade-stats.pull-right {
-    margin-left: 8px;
-  }
-  .gb-summary-grade-panel .gb-summary-grade-stats, .gb-summary-grade-panel .gb-summary-grade-stats:hover {
-    text-decoration: none;
-  }
-
-  .gb-summary-grade-panel .gb-summary-grade-stats:before {
-    font-family: 'bootstrap-icons';
-    content: '\F17A';
-    text-decoration: none;
-    font-weight: normal;
-  }
-
-  .gb-summary-grade-panel .gb-summary-category-toggle:before {
-    font-family: 'bootstrap-icons';
-    content: '\F282';
-    padding-right: 5px;
-    width: 24px;
-    text-align: center;
-  }
-  .gb-summary-grade-panel .gb-summary-category-toggle.collapsed:before {
-    content: '\F285';
-  }
-  .gb-summary-navigate-students {
-    margin-bottom: 20px;
-  }
-  .gb-summary-previous-student {
-    float: left;
-    padding-left: 20px;
-    margin-bottom: 10px;
-  }
-  .gb-summary-previous-student:before {
-    font-family: 'bootstrap-icons';
-    content: '\F12F';
-    padding-right: 4px;
-  }
-  .gb-summary-next-student {
-    float: right;
-    padding-right: 20px;
-    margin-bottom: 10px;
-  }
-  .gb-summary-next-student:after {
-    font-family: 'bootstrap-icons';
-    content: '\F138';
-    padding-left: 4px;
-  }
-  .gb-grade-summary-content .tabpanel {
-    display: block;
-    margin-top: 10px;
-  }
-  .gb-summary-grade-panel {
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 10px 0;
-    margin: 0 0 10px;
-    border-bottom: 1px solid var(--sakai-border-color);
-  }
-  .gb-summary-grade-panel .gb-summary-grade-flags {
-    padding-left: 10px;
-    float: right;
-  }
-  .gb-summary-not-released-flag,
-  .gb-summary-not-released-message {
-    color: var(--sakai-text-color-dimmed);
-  }
-  #studentGradeSummary {
-    margin: 30px 0 0;
-  }
-  .gb-grade-summary-close-confirmation {
-    z-index: 50000 !important;
-  }
-  .gb-grade-summary-close-confirmation .modal-dialog {
-    z-index: 50001 !important;
-  }
-  .gb-summary-print {
-    position: absolute;
-    top: 15px;
-    right: 10px;
-  }
-  .gb-summary-print:before {
-    font-family: 'bootstrap-icons';
-    content: '\F500';
-    padding-right: 4px;
-  }
-  #studentGradeSummary .table>tbody+tbody {
-    border-width: 1px;
-  }
-  #studentGradeSummary .table>tbody.gb-summary-assignments-tbody+tbody.gb-summary-category-tbody {
-    border-width: 2px;
-  }
-  .gb-summary-category-row td,
-  .gb-summary-category-row th {
-    background-color: var(--sakai-background-color-2);
-  }
-  .gb-summary-grade-comments div{
-    overflow-y: scroll;
-    overflow-x: hidden;
-    max-height:100px;
-  }
-
+  
   #gradebookGrades .gb-student-number-cell
   {
     width: 180px;
@@ -1157,17 +906,8 @@
     text-align: left;
   }
 
-  .gb-summary-grade-score-dropped
-  {
-    background-image: repeating-linear-gradient(135deg, var(--sakai-background-color-2), var(--sakai-background-color-2) 5px, var(--sakai-background-color-1) 5px, var(--sakai-background-color-1) 10px);
-    position: relative;
-  }
 
-  .gb-summary-grade-score-dropped .gb-summary-grade-score-raw,
-  .gb-summary-grade-score-excused .gb-summary-grade-score-raw
-  {
-    text-decoration: line-through;
-  }
+
 
   .gb-summary-grade-category-dropInfo
   {
@@ -1202,10 +942,6 @@
     text-align: center;
     color: var(--sakai-text-color-2);
     background-color: var(--sakai-background-color-3);
-    -ms-grid-row: 3;
-    -ms-grid-row-span: 1;
-    -ms-grid-column: 2;
-    -ms-grid-column-span: 1;
     grid-area: empty;
   }
   .gb-noGbItems > i
@@ -1216,10 +952,6 @@
 
   .gradeTableOuterWrapper
   {
-    -ms-grid-row: 3;
-    -ms-grid-row-span: 1;
-    -ms-grid-column: 1;
-    -ms-grid-column-span: 1;
     grid-area: grades;
   }
 
@@ -1229,6 +961,8 @@
     display: flex;
     -webkit-flex-direction: row;
     flex-direction: row;
+    grid-column-start: 1;
+    grid-column-end: span 2;
   }
 
   .gradesToolbar1 .captionToggleContainer
@@ -1243,28 +977,20 @@
 
   .gradesToolbar2
   {
-    -ms-grid-row: 2;
-    -ms-grid-row-span: 1;
-    -ms-grid-column: 1;
-    -ms-grid-column-span: 2;
     grid-area: toolbar2;
   }
 
   .gradeTableArea
   {
-    display: -ms-grid;
     display: grid;
-    -ms-grid-columns: auto 1fr;
     grid-template-columns: auto 1fr;
-    -ms-grid-rows: auto auto auto;
     grid-template-areas:
       "toolbar1 toolbar1"
       "toolbar2 toolbar2"
       "grades empty";
   }
 
-  #gradeTableWrapper
-  {
+  #gradeTableWrapper {
     background-color: var(--sakai-background-color-2);
   }
 
@@ -1315,6 +1041,7 @@
   {
     border-right: 1px solid var(--sakai-border-color);
     position: relative;
+    max-width: 100vw;
   }
 
   .gb-noGbItems button.active
@@ -1440,31 +1167,7 @@
     padding-bottom: 20px;
     border-bottom: 1px solid var(--sakai-border-color);
   }
-  /* **************************************************************** *
-   *                      Gradebook Print styles                      *
-   * **************************************************************** */
-   
-   .gb-summary-expand-all,
-   .gb-summary-collapse-all,
-   .gb-summary-category-toggle,
-   #toggleCategories,
-   #gradeSummaryTable-sticky
-   .tablesorter-icon {
-    display: none;
-   }
 
-  .gb-summary-grade-panel {
-    height: auto !important;
-  }
-
-  #gradeSummaryTable {
-    page-break-inside: auto;
-  }
-
-  #gradeSummaryTable tr {
-    page-break-inside: avoid;
-    page-break-after:auto;
-  }
   /* ********************************************************************* *
    *                      Gradebook Settings styles                        *
    * ********************************************************************* */
@@ -1500,18 +1203,6 @@
     .card {
       margin-bottom: 6px;
     }
-  }
-
-  /* Bootstrap > Morpheus overrides */
-  .checkbox input[type="checkbox"][disabled],
-  .radio input[type="radio"][disabled]{
-    background-color: var(--sakai-background-color-3);
-  }
-  .checkbox input[type="checkbox"][disabled]+span,
-  .radio input[type="radio"][disabled]+span,
-  .checkbox input[type="checkbox"][disabled]+label,
-  .radio input[type="radio"][disabled]+label{
-    color: var(--sakai-text-color-dimmed);
   }
 
   /* reset the padding and add to link instead, to make whole div clickable. See #3756 */
@@ -1554,16 +1245,6 @@
   .dropdown-menu>li>a,
   .nav>li>a {
     text-decoration: none;
-  }
-  .checkbox input[type="checkbox"][disabled],
-  .radio input[type="radio"][disabled]{
-    background-color: var(--sakai-background-color-3);
-  }
-  .checkbox input[type="checkbox"][disabled]+span,
-  .radio input[type="radio"][disabled]+span,
-  .checkbox input[type="checkbox"][disabled]+label,
-  .radio input[type="radio"][disabled]+label{
-    color: var(--sakai-text-color-dimmed);
   }
 
   .modal-add-or-edit-gbitem input[type="text"] {
@@ -1620,7 +1301,7 @@
       margin-bottom: 1em;
       width: 100%;
   }
-  form.quickEntryForm th{
+  form.quickEntryForm .tabulator-col{
       background-color: var(--sakai-background-color-3);
   }
   form.quickEntryForm table.table-striped tbody tr td{
@@ -1674,8 +1355,20 @@
       width: 485px;
       height: 100px;
   }
+
+  .dropdown-toggle::after {
+    display: none;
+  }
 }
 
+div.wicket-modal, .#{$namespace}sakai-gradebookng {
+  .checkbox input[type="checkbox"][disabled]+span,
+  .radio input[type="radio"][disabled]+span,
+  .checkbox input[type="checkbox"][disabled]+label,
+  .radio input[type="radio"][disabled]+label{
+    color: var(--sakai-text-color-dimmed);
+  }
+}
 div.wicket-modal div.w_content_3 {
   border: none; /** don't want border wrapping content inside the modal **/
 }
@@ -1715,13 +1408,6 @@ body:nth-child(n) div.wicket-mask-dark {
   filter: alpha(opacity=\95);
   background-color: \#000;
 }
-/* IE10+ blur fallback */
-@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  div.wicket-mask-dark {
-    opacity: 0.95;
-    background-color: var(--sakai-color-black);
-  }
-}
 div.wicket-modal div.w_content_container {
   /* give wicket model content some padding */
   padding: 0 20px 20px;
@@ -1755,8 +1441,8 @@ div.wicket-modal div.w_right {
   background-image: none !important;
 }
 div.wicket-modal a.w_close {
-  margin: 6px;
   color: var(--sakai-active-color-1);
+  transform: translateY(-15%);
 }
 div.wicket-modal div.w_caption {
   cursor: move;
@@ -1772,6 +1458,8 @@ div.wicket-modal .w_blue div.w_content
 {
   background: var(--sakai-background-color-1);
   color: var(--sakai-text-color-1);
+  display: flex;
+  align-items: center;
 }
 
 div.wicket-modal {
@@ -1791,4 +1479,199 @@ div.wicket-mask-transparent, div.wicket-mask-dark {
 .gb-input {
   padding-top: 0;
   padding-bottom: 1px
+}
+
+.gb-summary-grade-panel {
+  position: relative;
+}
+.gb-summary-grade-panel .gb-summary-category-row td:first-child {
+  font-weight: bold;
+}
+.gb-summary-grade-panel .gb-summary-grade-row td:first-child {
+  padding-left: 34px;
+}
+.gb-summary-grade-panel .gb-no-categories .gb-summary-grade-row td:first-child {
+  padding-left: 0;
+}
+.gb-summary-grade-duedate,
+.gb-summary-grade-score,
+.gb-summary-grade-weight,
+.gb-summary-category-grade,
+.gb-summary-category-weight {
+  text-align: center;
+}
+.gb-summary-grade-panel .gb-summary-course-grade {
+  margin: 0 0 10px 1px;
+}
+.gb-summary-grade-panel .gb-summary-course-grade .card {
+  margin-bottom: 0;
+}
+.gb-summary-grade-panel .gb-summary-course-grade .card-body {
+  padding: 8px 15px;
+}
+.gb-summary-grade-panel .gb-summary-course-grade-label {
+  padding-right: 10px;
+}
+.gb-summary-grade-panel .gb-summary-expand-all {
+  padding-right: 8px;
+}
+.gb-summary-grade-panel .gb-summary-category-toggle,
+.gb-summary-grade-panel .gb-summary-category-toggle:hover,
+.gb-summary-grade-panel .gb-summary-category-toggle:active {
+  text-decoration: none;
+  display: flex;
+  flex-grow: 2;
+}
+.gb-summary-grade-panel .gb-summary-category-toggle-container {
+  display: flex;
+  justify-content: space-between;
+}
+.gb-summary-grade-title {
+  font-weight: normal;
+}
+
+.gb-summary-grade-score sakai-rubric-student-button {
+    float: right;
+}
+.gb-summary-grade-panel .gb-summary-grade-stats.pull-right {
+  margin-left: 8px;
+}
+.gb-summary-grade-panel .gb-summary-grade-stats, .gb-summary-grade-panel .gb-summary-grade-stats:hover {
+  text-decoration: none;
+}
+
+.gb-summary-grade-panel .gb-summary-grade-stats:before {
+  font-family: 'bootstrap-icons';
+  content: '\F17A';
+  text-decoration: none;
+  font-weight: normal;
+}
+
+.gb-summary-grade-panel .gb-summary-category-toggle:before {
+  font-family: 'bootstrap-icons';
+  content: '\F282';
+  padding-right: 5px;
+  width: 24px;
+  text-align: center;
+}
+.gb-summary-grade-panel .gb-summary-category-toggle.collapsed:before {
+  content: '\F285';
+}
+.gb-summary-navigate-students {
+  margin-bottom: 20px;
+}
+.gb-grade-summary-content .tabpanel {
+  display: block;
+  margin-top: 10px;
+}
+.gb-summary-grade-panel {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 0;
+  margin: 0 0 10px;
+  border-bottom: 1px solid var(--sakai-border-color);
+}
+.gb-summary-grade-panel .gb-summary-grade-flags {
+  padding-left: 10px;
+  float: right;
+}
+.gb-summary-not-released-flag,
+.gb-summary-not-released-message {
+  color: var(--sakai-text-color-dimmed);
+}
+#studentGradeSummary {
+  margin: 30px 0 0;
+}
+.gb-grade-summary-close-confirmation {
+  z-index: 50000 !important;
+}
+.gb-grade-summary-close-confirmation .modal-dialog {
+  z-index: 50001 !important;
+}
+.gb-summary-print {
+  position: absolute;
+  top: 11px;
+  right: 10px;
+}
+.gb-summary-print:before {
+  font-family: 'bootstrap-icons';
+  content: '\F500';
+  padding-right: 4px;
+}
+
+
+.gb-summary-previous-student {
+  float: left;
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+.gb-summary-previous-student:before {
+  font-family: 'bootstrap-icons';
+  content: '\F12F';
+  padding-right: 4px;
+}
+.gb-summary-next-student {
+  float: right;
+  padding-right: 20px;
+  margin-bottom: 10px;
+}
+.gb-summary-next-student:after {
+  font-family: 'bootstrap-icons';
+  content: '\F138';
+  padding-left: 4px;
+}
+.gb-summary-grade-score-outof {
+color: var(--sakai-text-color-dimmed);
+}
+#studentGradeSummary .table>tbody+tbody {
+border-width: 1px;
+}
+#studentGradeSummary .table>tbody.gb-summary-assignments-tbody+tbody.gb-summary-category-tbody {
+border-width: 2px;
+}
+.gb-summary-category-row .tabulator-cell,
+.gb-summary-category-row .tabulator-col {
+background-color: var(--sakai-background-color-2);
+}
+.gb-summary-grade-comments div{
+overflow-y: scroll;
+overflow-x: hidden;
+max-height:100px;
+}
+
+.w_blue .w_content_container {
+  max-height: 450px;
+}
+
+.form-vertical > div.awesomplete {
+  display: flex;
+}
+
+.gb-editable,
+.gb-editable:before {
+  height: 34px;
+}
+
+.tabulator-cell.gb-category-average{
+  cursor: default !important;
+}
+
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+  font-weight: lighter;
+}
+
+.tabulator .tabulator-tableholder .tabulator-range-overlay {
+  z-index: 11;
+}
+
+.gb-summary-grade-score-dropped
+{
+  background-image: repeating-linear-gradient(135deg, var(--sakai-background-color-2), var(--sakai-background-color-2) 5px, var(--sakai-background-color-1) 5px, var(--sakai-background-color-1) 10px);
+  position: relative;
+}
+
+.gb-summary-grade-score-dropped .gb-summary-grade-score-raw,
+.gb-summary-grade-score-excused .gb-summary-grade-score-raw
+{
+  text-decoration: line-through;
 }

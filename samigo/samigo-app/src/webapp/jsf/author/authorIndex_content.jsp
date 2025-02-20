@@ -53,14 +53,14 @@
                 localStorage.setItem(`samigo-pageLength-\${portal.user.id}`, pageLength);
             }
 
-            var notEmptyTableTd = $("#authorIndexForm\\:coreAssessments td:not(:empty)").length;
-            var assessmentSortingColumn = <h:outputText value="'#{author.assessmentSortingColumn}'"/>;
+            const notEmptyTableTd = $("#authorIndexForm\\:coreAssessments td:not(:empty)").length;
+            const assessmentSortingColumn = <h:outputText value="'#{author.assessmentSortingColumn}'"/>;
 
             if (notEmptyTableTd > 0) {
-                $.fn.dataTable.ext.classes.sLengthSelect = 'form-control';
+                $.fn.dataTable.ext.classes.sLengthSelect = 'input-form-control';
                 var table = $("#authorIndexForm\\:coreAssessments").DataTable({
                     "paging": true,
-                    "lengthMenu": [[5, 10, 20, 50, 100, 200, -1], [5, 10, 20, 50, 100, 200, <h:outputText value="'#{authorFrontDoorMessages.assessment_view_all}'" />]],
+                    "lengthMenu": [[5, 10, 20, 50, 100, 200, -1], [5, 10, 20, 50, 100, 200, <h:outputText value="`#{authorFrontDoorMessages.assessment_view_all}`" />]],
                     "pageLength": getPageLength(),
                     "aaSorting": [[parseInt(assessmentSortingColumn), "desc"]],
                     "columns": [
@@ -77,20 +77,20 @@
                         {"bSortable": false, "bSearchable": false},
                     ],
                     "language": {
-                        "search": <h:outputText value="'#{authorFrontDoorMessages.datatables_sSearch}'" />,
-                        "lengthMenu": <h:outputText value="'#{authorFrontDoorMessages.datatables_lengthMenu}'" />,
-                        "zeroRecords": <h:outputText value="'#{authorFrontDoorMessages.datatables_zeroRecords}'" />,
-                        "info": <h:outputText value="'#{authorFrontDoorMessages.datatables_info}'" />,
-                        "infoEmpty": <h:outputText value="'#{authorFrontDoorMessages.datatables_infoEmpty}'" />,
-                        "infoFiltered": <h:outputText value="'#{authorFrontDoorMessages.datatables_infoFiltered}'" />,
-                        "emptyTable": <h:outputText value="'#{authorFrontDoorMessages.datatables_infoEmpty}'" />,
+                        "search": <h:outputText value="`#{dataTablesMessages.search}`" />,
+                        "lengthMenu": <h:outputText value="`#{authorFrontDoorMessages.datatables_lengthMenu}`" />,
+                        "zeroRecords": <h:outputText value="`#{authorFrontDoorMessages.datatables_zeroRecords}`" />,
+                        "info": <h:outputText value="`#{dataTablesMessages.info}`" />,
+                        "infoEmpty": <h:outputText value="`#{authorFrontDoorMessages.datatables_infoEmpty}`" />,
+                        "infoFiltered": <h:outputText value="`#{authorFrontDoorMessages.datatables_infoFiltered}`" />,
+                        "emptyTable": <h:outputText value="`#{dataTablesMessages.infoEmpty}`" />,
                         "paginate": {
-                            "next": <h:outputText value="'#{authorFrontDoorMessages.datatables_paginate_next}'" />,
-                            "previous": <h:outputText value="'#{authorFrontDoorMessages.datatables_paginate_previous}'" />,
+                            "next": <h:outputText value="`#{dataTablesMessages.paginate_next}`" />,
+                            "previous": <h:outputText value="`#{dataTablesMessages.paginate_previous}`" />,
                         },
                         "aria": {
-                            "sortAscending": <h:outputText value="'#{authorFrontDoorMessages.datatables_aria_sortAscending}'" />,
-                            "sortDescending": <h:outputText value="'#{authorFrontDoorMessages.datatables_aria_sortDescending}'" />,
+                            "sortAscending": <h:outputText value="`#{dataTablesMessages.aria_sortAscending}`" />,
+                            "sortDescending": <h:outputText value="`#{dataTablesMessages.aria_sortDescending}`" />,
                         }
                     },
                     "fnDrawCallback": function(oSettings) {
@@ -99,20 +99,20 @@
                     }
                 });
 
-                var spanClassName = "";
-                var filterGroups = [];
+                let spanClassName = "";
+                let filterGroups = [];
                 function filterBy() {
                     $.fn.dataTableExt.afnFiltering.push(
                         function (oSettings, aData, iDataIndex) {
-                            var showBySpan = true;
-                            var showByGroups = !<h:outputText value="#{author.groupFilterEnabled}" />;
+                            let showBySpan = true;
+                            let showByGroups = !<h:outputText value="#{author.groupFilterEnabled}" />;
 
                             if (spanClassName != "") {
                                 showBySpan = (($(oSettings.aoData[iDataIndex].anCells).children("span." + spanClassName).length > 0) ? true : false);
                             }
                             if (filterGroups != null) {
                                 for (var i=0; i<filterGroups.length; i++) {
-                                    var filter = filterGroups[i];
+                                    const filter = filterGroups[i];
                                     if (filter.startsWith("releaseto")) {
                                         showByGroups = (($(oSettings.aoData[iDataIndex].anCells).children("." + filterGroups[i]).length > 0) ? true : false);
                                     } else {
@@ -138,7 +138,7 @@
                     $.fn.dataTableExt.afnFiltering.push(
                         function (oSettings, aData, iDataIndex) {
                             if (spanClassName != "") {
-                                var spanLength = $(oSettings.aoData[iDataIndex].anCells).children("." + spanClassName).length;
+                                const spanLength = $(oSettings.aoData[iDataIndex].anCells).children("." + spanClassName).length;
                                 if (spanLength > 0) {
                                     return true;
                                 }
@@ -165,20 +165,20 @@
                 });
                 filterGroups = $("#authorIndexForm\\:group-select").val();
 
-                var divElem = document.createElement('div');
-                var filterPlaceholder = <h:outputText value="'#{authorFrontDoorMessages.multiselect_filterPlaceholder}'" />;
+                const divElem = document.createElement('div');
+                let filterPlaceholder = <h:outputText value="`#{authorFrontDoorMessages.multiselect_filterPlaceholder}`" />;
                 divElem.innerHTML = filterPlaceholder;
                 filterPlaceholder = divElem.textContent;
-                var selectAllText = <h:outputText value="'#{authorFrontDoorMessages.multiselect_selectAllText}'" />;
+                let selectAllText = <h:outputText value="`#{authorFrontDoorMessages.multiselect_selectAllText}`" />;
                 divElem.innerHTML = selectAllText;
                 selectAllText = divElem.textContent;
-                var nonSelectedText = <h:outputText value="'#{authorFrontDoorMessages.multiselect_nonSelectedText}'" />;
+                let nonSelectedText = <h:outputText value="`#{authorFrontDoorMessages.multiselect_nonSelectedText}`" />;
                 divElem.innerHTML = nonSelectedText;
                 nonSelectedText = divElem.textContent;
-                var allSelectedText = <h:outputText value="'#{authorFrontDoorMessages.multiselect_allSelectedText}'" />;
+                let allSelectedText = <h:outputText value="`#{authorFrontDoorMessages.multiselect_allSelectedText}`" />;
                 divElem.innerHTML = allSelectedText;
                 allSelectedText = divElem.textContent;
-                var nSelectedText = <h:outputText value="'#{authorFrontDoorMessages.multiselect_nSelectedText}'" />;
+                let nSelectedText = <h:outputText value="`#{authorFrontDoorMessages.multiselect_nSelectedText}`" />;
                 divElem.innerHTML = nSelectedText;
                 nSelectedText = divElem.textContent;
                 $("#authorIndexForm\\:group-select").multiselect({
@@ -207,18 +207,22 @@
                 if (length > 0) {
                     $("#authorIndexForm\\:remove-selected").removeClass("disabled");
                     $("#authorIndexForm\\:remove-selected").attr("tabindex", 0);
+                    $("#authorIndexForm\\:publish-selected").removeClass("disabled");
+                    $("#authorIndexForm\\:publish-selected").attr("tabindex", 0);
                 } else {
                     $("#authorIndexForm\\:remove-selected").addClass("disabled");
                     $("#authorIndexForm\\:remove-selected").attr("tabindex", -1);
+                    $("#authorIndexForm\\:publish-selected").addClass("disabled");
+                    $("#authorIndexForm\\:publish-selected").attr("tabindex", -1);
                 }
             }
         });
 
         function removeSelectedButtonAction() {
             if (!$("#authorIndexForm\\:remove-selected").hasClass("disabled")) {
-                var message = <h:outputText value="'#{authorMessages.cert_rem_assmt}'" />;
+                var message = <h:outputText value="`#{authorMessages.cert_rem_assmt}`" />;
                 message += "\n\n";
-                message += <h:outputText value="'#{authorMessages.cert_rem_assmt2}'" />;
+                message += <h:outputText value="`#{authorMessages.cert_rem_assmt2}`" />;
                 var elem = document.createElement('div');
                 elem.innerHTML = message;
                 if(!confirm(elem.textContent)) {
@@ -228,6 +232,21 @@
                 return true;
             }
         }
+
+        function publishSelectedButtonAction() {
+
+            if (!document.getElementById("authorIndexForm:remove-selected").classList.contains("disabled")) {
+                let message = <h:outputText value="`#{authorMessages.cert_pub_assmt}`" />;
+                const elem = document.createElement('div');
+                elem.innerHTML = message;
+                if (!confirm(elem.textContent)) {
+                    event.preventDefault();
+                    return false;
+                }
+                return true;
+            }
+        }
+
     </script>
 
     <!-- content... -->
@@ -248,14 +267,14 @@
 
             <h:panelGroup rendered="#{author.allAssessments.size() > 0}">
                 <div>
-                    <f:verbatim><label class="form-control-label"></f:verbatim>
+                    <f:verbatim><label class="form-label"></f:verbatim>
                         <h:outputText value="#{authorFrontDoorMessages.assessment_view} "/>
                         <h:selectOneMenu value="select" id="filter-type">
                             <f:selectItem itemValue="" itemLabel="#{authorFrontDoorMessages.assessment_view_all}" />
                             <f:selectItem itemValue="status_draft" itemLabel="#{authorFrontDoorMessages.assessment_pending}" />
-                            <f:selectItem itemValue="status_published" itemLabel="#{authorFrontDoorMessages.assessment_pub}" />
-                            <f:selectItem itemValue="status_true" itemLabel="#{authorFrontDoorMessages.assessment_status_active}" />
-                            <f:selectItem itemValue="status_false" itemLabel="#{authorFrontDoorMessages.assessment_status_inactive}" />
+                            <f:selectItem itemValue="status_published_2" itemLabel="#{authorFrontDoorMessages.assessment_status_active}" />
+                            <f:selectItem itemValue="status_published_1" itemLabel="#{authorFrontDoorMessages.assessment_status_pending}" />
+                            <f:selectItem itemValue="status_published_0" itemLabel="#{authorFrontDoorMessages.assessment_status_inactive}" />
                         </h:selectOneMenu>
                     <f:verbatim></label></f:verbatim>
                 </div>
@@ -356,24 +375,28 @@
 
 
                             <t:dataList layout="unorderedList" value="#{author.publishedSelectActionList}" var="pendingSelectActionList" rowIndexVar="index" styleClass="dropdown-menu row">
-                                <h:commandLink action="#{author.getOutcome}" value="#{authorMessages.action_scores}" styleClass="hiddenBtn_scores" rendered="#{index == 0 && assessment.submittedCount > 0}">
-                                    <f:param name="action" value="scores" />
-                                    <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
-                                </h:commandLink>
-
-                                <h:commandLink action="#{author.getOutcome}" value="#{commonMessages.edit_action}" rendered="#{author.canEditPublishedAssessment(assessment) and index == 0}" styleClass="hiddenBtn_edit_published">
-                                    <f:param name="action" value="edit_published" />
-                                    <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
-                                </h:commandLink>
-
-                                <h:commandLink action="#{author.getOutcome}" value="#{pendingSelectActionList.label}" styleClass="hiddenBtn_#{pendingSelectActionList.value} dropdown-item">
-                                    <f:param name="action" value="#{pendingSelectActionList.value}" />
-                                    <f:param name="assessmentId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
-                                </h:commandLink>
+                                <li>
+                                    <h:commandLink action="#{author.getOutcome}" value="#{authorMessages.action_scores}" styleClass="hiddenBtn_scores dropdown-item" rendered="#{index == 0 && assessment.submittedCount > 0}">
+                                        <f:param name="action" value="scores" />
+                                        <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
+                                    </h:commandLink>
+                                </li>
+                                <li>
+                                    <h:commandLink action="#{author.getOutcome}" value="#{commonMessages.edit_action}" rendered="#{author.canEditPublishedAssessment(assessment) and index == 0}" styleClass="hiddenBtn_edit_published dropdown-item">
+                                        <f:param name="action" value="edit_published" />
+                                        <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
+                                    </h:commandLink>
+                                </li>
+                                <li>
+                                    <h:commandLink action="#{author.getOutcome}" value="#{pendingSelectActionList.label}" styleClass="hiddenBtn_#{pendingSelectActionList.value} dropdown-item">
+                                        <f:param name="action" value="#{pendingSelectActionList.value}" />
+                                        <f:param name="assessmentId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
+                                    </h:commandLink>
+                                </li>
                             </t:dataList>
                         </h:panelGroup>
 
@@ -392,7 +415,7 @@
                             <f:verbatim></button></f:verbatim>
 
                             <t:dataList layout="unorderedList" value="#{author.publishedSelectActionList}" var="pendingSelectActionList" styleClass="dropdown-menu row" rowIndexVar="index">
-                                <h:commandLink action="#{author.getOutcome}" value="#{authorMessages.action_scores}" rendered="#{index == 0 && assessment.submittedCount > 0}" styleClass="hiddenBtn_scores">
+                                <h:commandLink action="#{author.getOutcome}" value="#{authorMessages.action_scores}" rendered="#{index == 0 && assessment.submittedCount > 0}" styleClass="hiddenBtn_scores dropdown-item">
                                     <f:param name="action" value="scores" />
                                     <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
                                     <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
@@ -422,18 +445,21 @@
                             <f:verbatim></button></f:verbatim>
 
                             <t:dataList layout="unorderedList" value="#{author.publishedSelectActionList}" var="pendingSelectActionList" styleClass="dropdown-menu row" rowIndexVar="index">
-                                <h:commandLink action="#{author.getOutcome}" value="#{commonMessages.edit_action}" rendered="#{author.canEditPublishedAssessment(assessment) and index == 0}" styleClass="hiddenBtn_edit_published">
-                                    <f:param name="action" value="edit_published" />
-                                    <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
-                                </h:commandLink>
-
-                                <h:commandLink action="#{author.getOutcome}" value="#{pendingSelectActionList.label}" styleClass="hiddenBtn_#{pendingSelectActionList.value} dropdown-item">
-                                    <f:param name="action" value="#{pendingSelectActionList.value}" />
-                                    <f:param name="assessmentId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
-                                    <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
-                                </h:commandLink>
+                                <li>
+                                    <h:commandLink action="#{author.getOutcome}" value="#{commonMessages.edit_action}" rendered="#{author.canEditPublishedAssessment(assessment) and index == 0}" styleClass="hiddenBtn_edit_published dropdown-item">
+                                        <f:param name="action" value="edit_published" />
+                                        <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
+                                    </h:commandLink>
+                                </li>
+                                <li>
+                                    <h:commandLink action="#{author.getOutcome}" value="#{pendingSelectActionList.label}" styleClass="hiddenBtn_#{pendingSelectActionList.value} dropdown-item">
+                                        <f:param name="action" value="#{pendingSelectActionList.value}" />
+                                        <f:param name="assessmentId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:param name="publishedId" value="#{assessment.publishedAssessmentId}"/>
+                                        <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
+                                    </h:commandLink>
+                                </li>
                             </t:dataList>
                         </h:panelGroup>
                     </h:panelGroup>
@@ -451,20 +477,23 @@
 
                     <h:panelGroup rendered="#{assessment['class'].simpleName == 'AssessmentFacade'}">
                         <f:verbatim><span class="status_draft"></f:verbatim>
-                            <h:outputText value="#{authorFrontDoorMessages.assessment_draft}" />
+                            <h:outputText styleClass="d-none spanValue" value="-1" />
+                            <h:outputText value="#{authorFrontDoorMessages.assessment_status_draft}" />
                         <f:verbatim></span></f:verbatim>
                     </h:panelGroup>
 
                     <h:panelGroup rendered="#{assessment['class'].simpleName == 'PublishedAssessmentFacade'}">
-                        <f:verbatim><span class="status_published status_</f:verbatim><h:outputText value="#{assessment.activeStatus}" /><f:verbatim>"></f:verbatim>
-                        <h:outputText value="#{authorFrontDoorMessages.assessment_status_active}" rendered="#{assessment.activeStatus==true}"/>
-                        <h:outputText value="#{authorFrontDoorMessages.assessment_status_inactive}" rendered="#{assessment.activeStatus==false}"/>
+                        <f:verbatim><span class="status_published_</f:verbatim><h:outputText value="#{assessment.activeStatus}" /><f:verbatim>"></f:verbatim>
+                        <h:outputText styleClass="d-none spanValue" value="#{assessment.activeStatus}" />
+                        <h:outputText value="#{authorFrontDoorMessages.assessment_status_active}" rendered="#{assessment.activeStatus==2}"/>
+                        <h:outputText value="#{authorFrontDoorMessages.assessment_status_pending}" rendered="#{assessment.activeStatus==1}"/>
+                        <h:outputText value="#{authorFrontDoorMessages.assessment_status_inactive}" rendered="#{assessment.activeStatus==0}"/>
                         <f:verbatim></span></f:verbatim>
                     </h:panelGroup>
                 </t:column>
 
                 <%/* In Progress */%>
-                <t:column headerstyleClass="inProgress hidden-xs hidden-sm" styleClass="inProgress hidden-xs hidden-sm">
+                <t:column headerstyleClass="inProgress d-none d-sm-table-cell" styleClass="inProgress d-none d-sm-table-cell">
                     <f:facet name="header">
                         <h:panelGroup>
                             <f:verbatim><a href="#" tabindex="-1"></f:verbatim>
@@ -479,7 +508,7 @@
                 </t:column>
 
                 <%/* Submitted */%>
-                <t:column headerstyleClass="submitted hidden-xs hidden-sm" styleClass="submitted hidden-xs hidden-sm">
+                <t:column headerstyleClass="submitted d-none d-sm-table-cell" styleClass="submitted d-none d-sm-table-cell">
                     <f:facet name="header">
                         <h:panelGroup>
                             <f:verbatim><a href="#" tabindex="-1"></f:verbatim>
@@ -510,7 +539,7 @@
                 </t:column>
 
                 <%/* Release To */%>
-                <t:column headerstyleClass="releaseTo hidden-xs hidden-sm" styleClass="releaseTo hidden-xs hidden-sm">
+                <t:column headerstyleClass="releaseTo d-none d-sm-table-cell" styleClass="releaseTo d-none d-sm-table-cell">
                     <f:facet name="header">
                         <h:panelGroup>
                             <f:verbatim><a href="#" tabindex="-1"></f:verbatim>
@@ -532,14 +561,14 @@
                         <t:div id="groupsPanel" style="display: none;">
                             <t:dataList layout="unorderedList" value="#{assessment.releaseToGroups.entrySet()}" var="group" styleClass="groupList">
                                 <h:outputText value="#{group.value}" />
-                                <h:outputText value="#{group.key}" styleClass="hidden" />
+                                <h:outputText value="#{group.key}" styleClass="d-none" />
                             </t:dataList>
                         </t:div>
                     </t:div>
                 </t:column>
 
                 <%/* Release Date */%>
-                <t:column headerstyleClass="releaseDate hidden-xs hidden-sm" styleClass="releaseDate hidden-xs hidden-sm">
+                <t:column headerstyleClass="releaseDate d-none d-sm-table-cell" styleClass="releaseDate d-none d-sm-table-cell">
                     <f:facet name="header">
                         <h:panelGroup>
                             <f:verbatim><a href="#" tabindex="-1"></f:verbatim>
@@ -553,7 +582,7 @@
                             <f:convertDateTime dateStyle="medium" timeStyle="short" timeZone="#{author.userTimeZone}" />
                         </h:outputText>
 
-                        <h:outputText value="#{assessment.startDate}" styleClass="hidden spanValue">
+                        <h:outputText value="#{assessment.startDate}" styleClass="d-none spanValue">
                             <f:convertDateTime pattern="yyyyMMddHHmmss" />
                         </h:outputText>
                     <f:verbatim></div></f:verbatim>
@@ -577,14 +606,14 @@
                             <h:outputText value=" #{selectIndexMessages.late} " styleClass="text-danger" rendered="#{assessment.pastDue}" />
                         </h:panelGroup>
 
-                        <h:outputText value="#{assessment.dueDate}" styleClass="hidden spanValue">
+                        <h:outputText value="#{assessment.dueDate}" styleClass="d-none spanValue">
                             <f:convertDateTime pattern="yyyyMMddHHmmss" />
                         </h:outputText>
                     <f:verbatim></div></f:verbatim>
                 </t:column>
 
                 <%/* Last Modified */%>
-                <t:column headerstyleClass="lastModified hidden-xs hidden-sm" styleClass="lastModified hidden-xs hidden-sm">
+                <t:column headerstyleClass="lastModified d-none d-sm-table-cell" styleClass="lastModified d-none d-sm-table-cell">
                     <f:facet name="header">
                         <h:panelGroup>
                             <f:verbatim><a href="#" tabindex="-1"></f:verbatim>
@@ -597,7 +626,7 @@
                 </t:column>
 
                 <%/* Modified Date */%>
-                <t:column headerstyleClass="lastModifiedDate hidden-xs hidden-sm" styleClass="lastModifiedDate hidden-xs hidden-sm">
+                <t:column headerstyleClass="lastModifiedDate d-none d-sm-table-cell" styleClass="lastModifiedDate d-none d-sm-table-cell">
                     <f:facet name="header">
                         <h:panelGroup>
                             <f:verbatim><a href="#" tabindex="-1"></f:verbatim>
@@ -611,7 +640,7 @@
                             <f:convertDateTime dateStyle="medium" timeStyle="short" timeZone="#{author.userTimeZone}" />
                         </h:outputText>
 
-                        <h:outputText value="#{assessment.lastModifiedDate}" styleClass="hidden spanValue">
+                        <h:outputText value="#{assessment.lastModifiedDate}" styleClass="d-none spanValue">
                             <f:convertDateTime pattern="yyyyMMddHHmmss" />
                         </h:outputText>
                     <f:verbatim></div></f:verbatim>
@@ -620,12 +649,12 @@
                 <%/* Remove */%>
                 <t:column rendered="#{authorization.deleteAnyAssessment or authorization.deleteOwnAssessment}">
                     <f:facet name="header">
-                        <h:outputText value="#{authorFrontDoorMessages.header_remove}" />
+                        <h:outputText value="#{authorFrontDoorMessages.header_select}" />
                     </f:facet>
 
                     <h:selectBooleanCheckbox value="#{assessment.selected}" styleClass="select-checkbox" title="#{authorFrontDoorMessages.assessment_select_to_remove}" />
                 </t:column>
-                <t:column rendered="#{!authorization.deleteAnyAssessment and !authorization.deleteOwnAssessment}" headerstyleClass="hidden" styleClass="hidden">
+                <t:column rendered="#{!authorization.deleteAnyAssessment and !authorization.deleteOwnAssessment}" headerstyleClass="d-none" styleClass="d-none">
                 </t:column>
             </t:dataTable>
 
@@ -642,6 +671,11 @@
 
         <h:commandButton type="button" id="remove-selected" value="#{authorFrontDoorMessages.assessment_remove_selected}" rendered="#{(authorization.deleteAnyAssessment or authorization.deleteOwnAssessment) and author.allAssessments.size() > 0}" styleClass="disabled" onclick="if (!removeSelectedButtonAction(this)) return false;" action="#{author.getOutcome}">
             <f:param name="action" value="remove_selected" />
+            <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
+            <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.AuthorActionListener" />
+        </h:commandButton>
+        <h:commandButton type="button" id="publish-selected" value="#{authorFrontDoorMessages.assessment_publish_selected}" rendered="#{author.allAssessments.size() > 0}" styleClass="disabled ms-2" onclick="if (!publishSelectedButtonAction(this)) return false;" action="#{author.getOutcome}">
+            <f:param name="action" value="publish_selected" />
             <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.ActionSelectListener" />
             <f:actionListener type="org.sakaiproject.tool.assessment.ui.listener.author.AuthorActionListener" />
         </h:commandButton>

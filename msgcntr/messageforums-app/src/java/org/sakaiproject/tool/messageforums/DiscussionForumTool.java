@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -105,6 +106,7 @@ import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.CalendarService;
+import org.sakaiproject.calendar.api.CalendarConstants;
 import org.sakaiproject.component.app.messageforums.dao.hibernate.DBMembershipItemImpl;
 import org.sakaiproject.component.app.messageforums.dao.hibernate.util.comparator.ForumBySortIndexAscAndCreatedDateDesc;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -126,11 +128,11 @@ import org.sakaiproject.event.api.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.grading.api.GradingConstants;
 import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.grading.api.AssessmentNotFoundException;
 import org.sakaiproject.grading.api.Assignment;
 import org.sakaiproject.grading.api.GradeDefinition;
-import org.sakaiproject.grading.api.GradeType;
 import org.sakaiproject.grading.api.GradingService;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
@@ -324,6 +326,8 @@ public class DiscussionForumTool {
   private static final String AUTOCREATE_TOPICS_GROUPS_DESCRIPTION = "cdfm_autocreate_topics_desc_groups";
   private static final String DUPLICATE_COPY_TITLE = "cdfm_duplicate_copy_title";
   private static final String TASK_NOT_CREATED =  "cdfm_cant_create_task";
+  private static final String MSG_PVT_ANSWER_PREFIX = "pvt_answer_title_prefix";
+  private static final String MSG_PVT_QUESTION_PREFIX = "pvt_question_title_prefix";
   
   private static final String FROM_PAGE = "msgForum:mainOrForumOrTopic";
   /**
@@ -531,12 +535,9 @@ public class DiscussionForumTool {
   /**
    * @return
    */
-  public boolean isInstructor()
-  {
-    log.debug("isInstructor()");
-    if (instructor == null)
-    {
-    	instructor = forumManager.isInstructor();
+  public boolean isInstructor() {
+    if (instructor == null) {
+        instructor = forumManager.isInstructor();
     }
     return instructor.booleanValue();
   }
@@ -544,12 +545,9 @@ public class DiscussionForumTool {
   /**
    * @return
    */
-  public boolean isSectionTA()
-  {
-    log.debug("isSectionTA()");
-    if (sectionTA == null)
-    {
-    	sectionTA = forumManager.isSectionTA();
+  public boolean isSectionTA() {
+    if (sectionTA == null) {
+        sectionTA = forumManager.isSectionTA();
     }
     return sectionTA.booleanValue();
   }
@@ -983,11 +981,9 @@ public class DiscussionForumTool {
    * 
    * @return
    */
-  public boolean getNewForum()
-  {
-    log.debug("getNewForum()");
-    if (newForum == null){
-    	newForum = uiPermissionsManager.isNewForum();
+  public boolean getNewForum() {
+    if (newForum == null) {
+        newForum = uiPermissionsManager.isNewForum();
     }
     return newForum.booleanValue();
   }
@@ -2282,15 +2278,8 @@ public class DiscussionForumTool {
     } else {  //don't do anything with forumItem or the Calendar if it's not a Forum or a Forum Topic.
       return;
     }
+
     Collection<Group> allowedGroups = getAllowedGroups(membershipItems);
-    if (allowedGroups.size() == 0 && !studentsAllowed(membershipItems)) {
-      sendOpenCloseToCalendar = false; //if no groups or students are allowed to see this, we will treat it as though Send is not checked at all.
-      if (forumItem instanceof DiscussionTopic) {  //clear the forum item's value as well, if this is the case.
-        ((DiscussionTopic) forumItem).setSendOpenCloseToCalendar(false);
-      } else if (forumItem instanceof DiscussionForum) {
-        ((DiscussionForum) forumItem).setSendOpenCloseToCalendar(false);
-      }
-    }
     try {   //now actually start processing the data for Calendar.
       Calendar targetCalendar = this.calendarService.getCalendar(calendarService.calendarReference(getContextSiteId().replace("/site/",""), siteService.MAIN_CONTAINER));
       if(targetCalendar == null){
@@ -2313,6 +2302,7 @@ public class DiscussionForumTool {
             begin.setType(getResourceBundleString("sendOpenCloseToCalendar.type"));
             begin.setGroupAccess(allowedGroups, false);
             begin.setRange(this.timeService.newTimeRange(openDate.getTime(), 0));
+            begin.setField(CalendarConstants.EVENT_OWNED_BY_TOOL_ID, FORUMS_TOOL_ID);
             targetCalendar.commitEvent(begin);
           } else {  //if there is a Calendar event for the current forum item, but the open date is cleared, we interpret this as a removal.
             targetCalendar.removeEvent(begin);
@@ -2325,6 +2315,7 @@ public class DiscussionForumTool {
           begin.setType(getResourceBundleString("sendOpenCloseToCalendar.type"));
           begin.setGroupAccess(allowedGroups, false);
           begin.setRange(this.timeService.newTimeRange(openDate.getTime(), 0));
+          begin.setField(CalendarConstants.EVENT_OWNED_BY_TOOL_ID, FORUMS_TOOL_ID);
           targetCalendar.commitEvent(begin);
         }
         if (calendarEndId != null) {
@@ -2341,6 +2332,7 @@ public class DiscussionForumTool {
             end.setType(getResourceBundleString("sendOpenCloseToCalendar.type"));
             end.setGroupAccess(allowedGroups, false);
             end.setRange(this.timeService.newTimeRange(closeDate.getTime(), 0));
+            end.setField(CalendarConstants.EVENT_OWNED_BY_TOOL_ID, FORUMS_TOOL_ID);
             targetCalendar.commitEvent(end);
           } else {  //if there is a Calendar record for the closing, but no close date, we interpret it as a removal.
             targetCalendar.removeEvent(end);
@@ -2353,6 +2345,7 @@ public class DiscussionForumTool {
           end.setType(getResourceBundleString("sendOpenCloseToCalendar.type"));
           end.setGroupAccess(allowedGroups, false);
           end.setRange(this.timeService.newTimeRange(closeDate.getTime(), 0));
+          end.setField(CalendarConstants.EVENT_OWNED_BY_TOOL_ID, FORUMS_TOOL_ID);
           targetCalendar.commitEvent(end);
         }
         if (begin != null) { //put the Calendar entry for Open in the Forum data.
@@ -2446,13 +2439,6 @@ public class DiscussionForumTool {
       }
     }
     return output;
-  }
-
-  private Boolean studentsAllowed (Set<DBMembershipItem> membershipItems){  //find out if users in the Student role are allowed to use a Forum Item in any way.
-    if (membershipItems != null) {
-      return membershipItems.stream().filter(itemNow -> itemNow.getName().equals("Student") && !itemNow.getPermissionLevelName().equals("None")).findFirst().isPresent();
-    }
-    return false;
   }
 
   /**
@@ -3474,12 +3460,9 @@ public class DiscussionForumTool {
     				decoMsg.setRevise(decoTopicGetIsReviseAny 
     						|| (decoTopicGetIsReviseOwn && isOwn));
     				decoMsg.setUserCanDelete(decoTopicGetIsDeleteAny || (isOwn && decoTopicGetIsDeleteOwn));
-    				log.debug("decoMsg.setUserCanEmail()");
-    				log.debug("isSectionTA()" + isSectionTA());
     				decoMsg.setUserCanEmail(!useAnonymousId && (isInstructor() || isSectionTA()));
     				decoTopic.addMessage(decoMsg);
     			}
-				if (log.isDebugEnabled()) log.debug("SETRANK calling getSelectedMessage, we can set Rank here");
 				String userEid = decoMsg.getMessage().getCreatedBy();
 				Rank thisrank = this.getAuthorRank(userEid);
 				decoMsg.setAuthorRank(thisrank);
@@ -4316,12 +4299,34 @@ public class DiscussionForumTool {
   
   public String processDfMsgReplyMsg()
   {
-	  selectedMessageCount  = 0;
-    if(selectedMessage.getMessage().getTitle() != null && !selectedMessage.getMessage().getTitle().startsWith(getResourceBundleString(MSG_REPLY_PREFIX)))
-	  this.composeTitle = getResourceBundleString(MSG_REPLY_PREFIX) + " " + selectedMessage.getMessage().getTitle() + " ";
-    else
-      this.composeTitle = selectedMessage.getMessage().getTitle();
-  	
+    selectedMessageCount = 0;
+
+    boolean isFaqForum = Boolean.TRUE.equals(selectedTopic.getTopic().getFaqTopic());
+
+    String replyPrefix = getResourceBundleString(MSG_REPLY_PREFIX);
+    String answerPrefix = getResourceBundleString(MSG_PVT_ANSWER_PREFIX);
+    String questionPrefix = getResourceBundleString(MSG_PVT_QUESTION_PREFIX);
+    String title = StringUtils.trim(selectedMessage.getMessage().getTitle());
+
+    if (StringUtils.startsWith(title, replyPrefix)) {
+        // Re: title --> Re: title
+        this.composeTitle = title;
+    } else if (isFaqForum) {
+        if (StringUtils.startsWith(title, questionPrefix)) {
+            // Q: title -> A: title
+            this.composeTitle = StringUtils.replace(title, questionPrefix, answerPrefix);
+        } else {
+            // title --> Re: title
+            // A: title --> Re: A: title
+            this.composeTitle = replyPrefix + " " + title;
+        }
+    } else {
+        // title --> Re: title
+        // A: title --> Re: A: title
+        // Q: title --> Re: Q: title
+        this.composeTitle = replyPrefix + " " + title;
+    }
+
     return "dfMessageReply";
   }
 
@@ -4516,7 +4521,7 @@ public class DiscussionForumTool {
 	  if (function == null) {
 		  allowedToGradeItem = false;
 		  selGBItemRestricted = true;
-	  } else if (function.equalsIgnoreCase(GradingService.gradePermission)) {
+	  } else if (function.equalsIgnoreCase(GradingConstants.gradePermission)) {
 		  allowedToGradeItem = true;
 		  selGBItemRestricted = false;
 	  } else {
@@ -4525,12 +4530,12 @@ public class DiscussionForumTool {
 	  }
 	  
 	  // get the grade entry type for the gradebook
-	  GradeType gradeEntryType = gradingService.getGradeEntryType(gradebookUid);
-	  if (gradeEntryType == GradeType.LETTER) {
+	  Integer gradeEntryType = gradingService.getGradeEntryType(gradebookUid);
+	  if (Objects.equals(GradingConstants.GRADE_TYPE_LETTER, gradeEntryType)) {
 	      gradeByLetter = true;
 	      gradeByPoints = false;
 	      gradeByPercent = false;
-	  } else if (gradeEntryType == GradeType.PERCENTAGE) {
+	  } else if (Objects.equals(GradingConstants.GRADE_TYPE_PERCENTAGE, gradeEntryType)) {
 	      gradeByLetter = false;
 	      gradeByPoints = false;
 	      gradeByPercent = true;
@@ -5639,6 +5644,10 @@ public class DiscussionForumTool {
     {
       forum.setDefaultAssignName( selectedForum.getGradeAssign() );
     }
+    else if(selectedForum.getGradeAssign() != null && DEFAULT_GB_ITEM.equals(selectedForum.getGradeAssign()))
+    {
+      forum.setDefaultAssignName( null );
+    }
   }
   
   public void saveForumAttach(DiscussionForum forum)
@@ -5698,6 +5707,10 @@ public class DiscussionForumTool {
     if(selectedTopic.getGradeAssign() != null && !DEFAULT_GB_ITEM.equals(selectedTopic.getGradeAssign()))
     {
       topic.setDefaultAssignName( selectedTopic.getGradeAssign() );
+    }
+    else if(selectedTopic.getGradeAssign() != null && DEFAULT_GB_ITEM.equals(selectedTopic.getGradeAssign()))
+    {
+        topic.setDefaultAssignName( null );
     }
   }
   
@@ -6059,7 +6072,7 @@ public class DiscussionForumTool {
        if (!gradeValid) {
            // see if we can figure out why
            String errorMessageRef = GRADE_INVALID_GENERIC;
-           if (gradingService.getGradeEntryType(gradebookUid) != GradeType.LETTER) {
+           if (!Objects.equals(GradingConstants.GRADE_TYPE_LETTER, gradingService.getGradeEntryType(gradebookUid))) {
                if(!isNumber(gradePoint))
                {
                    errorMessageRef = GRADE_GREATER_ZERO;
@@ -7578,7 +7591,6 @@ public class DiscussionForumTool {
 	}
 	
 	public void  sendEmailNotification(Message reply, DiscussionMessageBean currthread, boolean needsModeration){
-		log.debug("ForumTool.sendEmailNotification(Message, DiscussionMessageBean, boolean)");
 
 		if (!reply.getTopic().getAllowEmailNotifications()) {
 			return;
@@ -7613,8 +7625,9 @@ public class DiscussionForumTool {
 			}
 		}
 
-		//MSGCNTR-375 if this post needs to be moderated, only send the email notification to those with moderator permission
-		if(needsModeration) {
+		// MSGCNTR-375 if this post needs to be moderated, only send the email notification to those with moderator permission
+		// Except if the moderator is the creator of the topic.
+		if (needsModeration && !selectedTopic.getIsModeratedAndHasPerm()) {
 			DiscussionTopic topic = (DiscussionTopic)reply.getTopic();
 			DiscussionForum forum = (DiscussionForum)topic.getBaseForum();
 

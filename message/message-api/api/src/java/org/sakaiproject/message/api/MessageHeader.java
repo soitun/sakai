@@ -88,6 +88,7 @@ public interface MessageHeader extends AttachmentContainer
 	 * @return The date/time the message was sent to the channel.
 	 * @deprecated {@link #getInstant()}
 	 */
+	@Deprecated
 	Time getDate();
 	
 	/**
@@ -117,6 +118,13 @@ public interface MessageHeader extends AttachmentContainer
 	 * @return True if the message is a draft, false if not.
 	 */
 	boolean getDraft();
+
+	/**
+	 * Access the subject of the message.
+	 *
+	 * @return The subject of the message.
+	 */
+	String getSubject();
 
 	/**
 	 * Access the groups defined for this message.

@@ -34,6 +34,7 @@ import org.sakaiproject.site.api.SiteService.SiteTitleValidationStatus;
  * @deprecated Static covers should not be used in favour of injection or lookup
  * via the component manager. This cover will be removed in a later version of the Kernel
  */
+@Deprecated
 public class SiteService
 {
 	/**
@@ -73,6 +74,8 @@ public class SiteService
 	public static java.lang.String SECURE_ADD_USER_SITE = org.sakaiproject.site.api.SiteService.SECURE_ADD_USER_SITE;
 
 	public static java.lang.String SECURE_REMOVE_SITE = org.sakaiproject.site.api.SiteService.SECURE_REMOVE_SITE;
+
+	public static java.lang.String SOFT_DELETE_SITE = org.sakaiproject.site.api.SiteService.SOFT_DELETE_SITE;
 	
 	public static java.lang.String SECURE_REMOVE_SOFTLY_DELETED_SITE = org.sakaiproject.site.api.SiteService.SECURE_REMOVE_SOFTLY_DELETED_SITE;
 	

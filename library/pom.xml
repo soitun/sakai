@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>master</artifactId>
 		<groupId>org.sakaiproject</groupId>
-		<version>24-SNAPSHOT</version>
+		<version>25-SNAPSHOT</version>
 		<relativePath>../master/pom.xml</relativePath>
 	</parent>
 	<name>Sakai Library</name>
@@ -14,13 +14,12 @@
 	<packaging>war</packaging>
 	<properties>
 		<!-- This is used in re-write rules as well -->
-		<ckeditor.version>4.16.1</ckeditor.version>
+		<ckeditor.version>4.22.1</ckeditor.version>
 		<bootstrap-version>5.2.0</bootstrap-version>
-		<font-awesome-version>4.7.0</font-awesome-version>
-		<node-version>v16.8.0</node-version>
-		<npm-version>6.14.15</npm-version>
 		<!-- Default extra plugins enabled -->
 		<ckeditor-extra-plugins>sakaipreview,sakaidropdowntoolbar,sakaiopenlink,</ckeditor-extra-plugins>
+		<!-- Default math extra plugins enabled -->
+		<ckeditor-math-extra-plugins></ckeditor-math-extra-plugins>
 		<!-- Empty defaults for a11y-->
 		<ckeditor-a11y-extra-plugins></ckeditor-a11y-extra-plugins>
 		<sakai.skin.source>default</sakai.skin.source>
@@ -90,16 +89,22 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>github-com-bahriddin-ckeditor-html5-video</artifactId>
+			<groupId>org.webjars</groupId>
+			<artifactId>ckeditor-html5-video</artifactId>
 			<version>${ckeditor.html5video.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>ckeditor4-fmath-editor</artifactId>
+			<version>${ckeditor4.fmath.editor.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<!--Used in Resources, drag&drop resources -->
 		<dependency>
 			<groupId>org.webjars.npm</groupId>
 			<artifactId>dropzone</artifactId>
-			<version>5.9.2</version>
+			<version>5.9.3</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -109,7 +114,7 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.webjars</groupId>
+			<groupId>org.webjars.bower</groupId>
 			<artifactId>handlebars</artifactId>
 			<version>${handlebars4.version}</version>
 			<scope>runtime</scope>
@@ -196,7 +201,7 @@
 		<dependency>
 			<groupId>org.webjars.bower</groupId>
 			<artifactId>elfinder</artifactId>
-			<version>2.1.59</version>
+			<version>2.1.65</version>
 			<scope>runtime</scope>
 			<exclusions>
 				<!-- The exclusions are because the bower versions don't have concat/min versions -->
@@ -209,12 +214,6 @@
 					<groupId>org.webjars.bower</groupId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>fontawesome</artifactId>
-			<version>${font-awesome-version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<!--Used in the portal, profile image change option -->
 		<dependency>
@@ -242,6 +241,12 @@
 			<groupId>org.webjars</groupId>
 			<artifactId>datatables</artifactId>
 			<version>1.10.25</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>datatables-plugins</artifactId>
+			<version>1.13.1</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -307,14 +312,14 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>pdf-js</artifactId>
-			<version>2.9.359</version>
+			<version>4.0.269</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>viewerjs</artifactId>
 			<version>0.5.9</version>
 		</dependency>
-		<!--Used in the BasicLTI and Site Manage-->
+		<!--Used in the LTI and Site Manage-->
 		<dependency>
 			<groupId>org.webjars.npm</groupId>
 			<artifactId>fontawesome-iconpicker</artifactId>
@@ -364,7 +369,6 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>buildnumber-maven-plugin</artifactId>
-						<version>1.4</version>
 						<executions>
 							<execution>
 								<phase>validate</phase>
@@ -406,28 +410,10 @@
 									<outputDirectory>${basedir}/src/webapp/skin/${sakai.skin.target}/fonts/</outputDirectory>
 									<resources>
 										<resource>
-											<directory>${basedir}/src/skins/${sakai.skin.source}/node_modules/font-awesome/fonts/</directory>
+											<directory>${basedir}/src/skins/${sakai.skin.source}/src/sass/font-awesome/fonts/</directory>
 										</resource>
 										<resource>
 											<directory>${basedir}/src/skins/${sakai.skin.source}/node_modules/bootstrap-icons/font/fonts/</directory>
-										</resource>
-									</resources>
-								</configuration>
-							</execution>
-							<execution>
-								<id>copy-fonts-css</id>
-								<phase>generate-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${basedir}/src/webapp/skin/${sakai.skin.target}/font-awesome/</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/${sakai.skin.source}/fonts/</directory>
-											<includes>
-												<include>*.css</include>
-											</includes>
 										</resource>
 									</resources>
 								</configuration>
@@ -450,27 +436,21 @@
 						</executions>
 					</plugin>
 					<plugin>
-						<groupId>com.coderplus.maven.plugins</groupId>
-						<artifactId>copy-rename-maven-plugin</artifactId>
-						<version>1.0</version>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
 						<executions>
 							<execution>
 								<id>copy-customizations</id>
 								<phase>generate-resources</phase>
 								<goals>
-									<goal>copy</goal>
+									<goal>run</goal>
 								</goals>
 								<configuration>
-									<fileSets>
-										<fileSet>
-											<sourceFile>${sakai.skin.customization.scss.lib}</sourceFile>
-											<destinationFile>${basedir}/src/skins/${sakai.skin.source}/src/sass/_customization-lib.scss</destinationFile>
-										</fileSet>
-										<fileSet>
-											<sourceFile>${sakai.skin.customization.scss.main}</sourceFile>
-											<destinationFile>${basedir}/src/skins/${sakai.skin.source}/src/sass/_customization-main.scss</destinationFile>
-										</fileSet>
-										</fileSets>
+									<target>
+										<!-- Copy and rename files -->
+										<copy file="${sakai.skin.customization.scss.lib}" tofile="${basedir}/src/skins/${sakai.skin.source}/src/sass/_customization-lib.scss" />
+										<copy file="${sakai.skin.customization.scss.main}" tofile="${basedir}/src/skins/${sakai.skin.source}/src/sass/_customization-main.scss" />
+									</target>
 								</configuration>
 							</execution>
 						</executions>
@@ -479,6 +459,14 @@
 						<groupId>com.samaxes.maven</groupId>
 						<artifactId>minify-maven-plugin</artifactId>
 						<version>1.7.6</version>
+						<dependencies>
+							<!-- Must override this dependency, even though not declared (see MNG-6965) -->
+							<dependency>
+								<groupId>org.codehaus.plexus</groupId>
+								<artifactId>plexus-utils</artifactId>
+								<version>3.5.1</version>
+							</dependency>
+						</dependencies>
 						<executions>
                             <execution>
                                 <id>default-minify</id>
@@ -522,7 +510,6 @@
 					<plugin>
 						<groupId>com.github.eirslett</groupId>
 						<artifactId>frontend-maven-plugin</artifactId>
-						<version>1.12.0</version>
 						<configuration>
 							<installDirectory>target</installDirectory>
 							<workingDirectory>${basedir}/src/skins/${sakai.skin.source}</workingDirectory>
@@ -535,8 +522,7 @@
 									<goal>install-node-and-npm</goal>
 								</goals>
 								<configuration>
-									<nodeVersion>${node-version}</nodeVersion>
-									<npmVersion>${npm-version}</npmVersion>
+									<nodeVersion>${sakai.node.version}</nodeVersion>
 								</configuration>
 							</execution>
 							<execution>
@@ -547,7 +533,7 @@
 								</goals>
 								<configuration>
 									<arguments>
-										ci --unsafe-perms --save-dev
+										ci --unsafe-perms --no-fund --save-dev
 									</arguments>
 								</configuration>
 							</execution>
@@ -567,16 +553,6 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-clean-plugin</artifactId>
-						<version>3.1.0</version>
-						<executions>
-							<execution>
-								<id>remove-skin</id>
-								<phase>clean</phase>
-								<goals>
-									<goal>clean</goal>
-								</goals>
-							</execution>
-						</executions>
 						<configuration>
 							<filesets>
 								<fileset>
@@ -585,28 +561,14 @@
 								<fileset>
 									<directory>${basedir}/src/webapp/assets</directory>
 								</fileset>
+								<fileset>
+									<directory>${basedir}/src/skins/default/node_modules</directory>
+								</fileset>
+								<fileset>
+									<directory>${basedir}/src/skins/default/target</directory>
+								</fileset>
 							</filesets>
 						</configuration>
-					</plugin>
-					
-					<plugin>
-						<groupId>com.github.jknack</groupId>
-						<artifactId>handlebars-maven-plugin</artifactId>
-						<version>4.0.5</version>
-						<executions>
-							<execution>
-								<id>templates</id>
-								<phase>prepare-package</phase>
-								<goals>
-									<goal>precompile</goal>
-								</goals>
-								<configuration>
-									<output>${basedir}/src/webapp/templates.js</output>
-									<prefix>${basedir}/src/templates</prefix>
-									<amd>false</amd>
-								</configuration>
-							</execution>
-						</executions>
 					</plugin>
 				</plugins>
 			</build>
@@ -653,8 +615,7 @@
 									<goal>install-node-and-npm</goal>
 								</goals>
 								<configuration>
-									<nodeVersion>${node-version}</nodeVersion>
-									<npmVersion>${npm-version}</npmVersion>
+									<nodeVersion>${sakai.node.version}</nodeVersion>
 								</configuration>
 							</execution>
 							<execution>
@@ -705,6 +666,19 @@
 					<scope>runtime</scope>
 				</dependency>
 			</dependencies>
+		</profile>
+		<profile>
+			<!-- To enable the FMATH plugin in the CKEditor compile with the flag -Dckeditor-fmath -->
+			<id>ckeditor-fmath</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>ckeditor-fmath</name>
+				</property>
+			</activation>
+			<properties>
+				<ckeditor-math-extra-plugins>FMathEditor</ckeditor-math-extra-plugins>
+			</properties>
 		</profile>
 	</profiles>
 	<build>

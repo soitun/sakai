@@ -8,19 +8,23 @@ on:
 
 jobs:
   maven-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Git Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref }}
           fetch-depth: 0
-      - name: JDK 11
-        uses: actions/setup-java@v3
+      - name: JDK 17
+        uses: actions/setup-java@v4
         with:
-          java-version: 11
+          java-version: 17
           distribution: temurin
-          architecture: x64
           cache: maven
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.9
       - name: Search for bad unicode translations
         run: |
           find . -name \*.properties -exec grep '\\u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][^0-9a-fA-F]' {} \; &> grep.txt
@@ -33,4 +37,6 @@ jobs:
       - name: Build with Maven
         env:
           MAVEN_OPTS: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true -Dmaven.wagon.http.retryHandler.count=2 -Dmaven.wagon.http.pool=true
-        run: mvn --batch-mode -PskipBrokenTests test
+        run: mvn --show-version --batch-mode -PskipBrokenTests test
+
+

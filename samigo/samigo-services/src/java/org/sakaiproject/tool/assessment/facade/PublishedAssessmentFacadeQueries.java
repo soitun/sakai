@@ -71,10 +71,11 @@ import org.sakaiproject.tool.assessment.data.ifc.assessment.SectionDataIfc;
 import org.sakaiproject.tool.assessment.facade.util.PagingUtilQueriesAPI;
 import org.sakaiproject.tool.assessment.integration.context.IntegrationContextFactory;
 import org.sakaiproject.tool.assessment.integration.helper.ifc.GradebookServiceHelper;
-import org.sakaiproject.tool.assessment.integration.helper.ifc.PublishingTargetHelper;
 import org.sakaiproject.tool.assessment.osid.shared.impl.IdImpl;
 import org.sakaiproject.tool.assessment.services.PersistenceService;
 import org.sakaiproject.tool.assessment.services.assessment.AssessmentService;
+import org.sakaiproject.tool.assessment.shared.api.grading.GradingSectionAwareServiceAPI;
+import org.sakaiproject.tool.assessment.shared.impl.grading.GradingSectionAwareServiceImpl;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.orm.hibernate5.HibernateCallback;
@@ -193,8 +194,8 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 		// metadata
 		Set publishedMetaDataSet = preparePublishedMetaDataSet(
 				publishedAssessment, a.getAssessmentMetaDataSet());
-		log.debug("******* metadata set" + a.getAssessmentMetaDataSet());
-		log.debug("******* published metadata set" + publishedMetaDataSet);
+		log.debug("******* metadata set: {}", a.getAssessmentMetaDataSet());
+		log.debug("******* published metadata set: {}", publishedMetaDataSet);
 		publishedAssessment.setAssessmentMetaDataSet(publishedMetaDataSet);
 
 		// IPAddress
@@ -225,7 +226,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 				.getShowStudentScore(), a.getShowStudentQuestionScore(), a
 				.getShowQuestionLevelFeedback(), a
 				.getShowSelectionLevelFeedback(), a.getShowGraderComments(), a
-				.getShowStatistics());
+				.getShowStatistics(), a.getShowCorrection());
 		publishedFeedback.setAssessmentBase(p);
 		return publishedFeedback;
 	}
@@ -235,12 +236,15 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 		if (a == null) {
 			return new PublishedAccessControl();
 		}
+
+		// If instructor does an instant-publish without viewing settings, we may not have a start date
+		final Date startDate = a.getStartDate() != null ? a.getStartDate() : new Date();
 		PublishedAccessControl publishedAccessControl = new PublishedAccessControl(
 				a.getSubmissionsAllowed(), a.getSubmissionsSaved(), a
 						.getAssessmentFormat(), a.getBookMarkingItem(), a
 						.getTimeLimit(), a.getTimedAssessment(), a
-						.getRetryAllowed(), a.getLateHandling(), a.getInstructorNotification(), a
-						.getStartDate(), a.getDueDate(), a.getScoreDate(), a
+						.getRetryAllowed(), a.getLateHandling(), a.getInstructorNotification(),
+						 startDate, a.getDueDate(), a.getScoreDate(), a
 						.getFeedbackDate());
 		publishedAccessControl.setRetractDate(a.getRetractDate());
 		publishedAccessControl.setAutoSubmit(a.getAutoSubmit());
@@ -389,6 +393,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 			publishedItem.setAnswerOptionsRichCount(item.getAnswerOptionsRichCount());
 			publishedItem.setAnswerOptionsSimpleOrRich(item.getAnswerOptionsSimpleOrRich());
 			publishedItem.setIsExtraCredit(item.getIsExtraCredit());
+			publishedItem.setIsFixed(item.getIsFixed());
 
 			h.add(publishedItem);
 		}
@@ -414,6 +419,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 					itemText.getItemTextAttachmentSet(), protocol);
 			publishedItemText.setItemTextAttachmentSet(publishedItemTextAttachmentSet);
 			publishedItemText.setRequiredOptionsCount(itemText.getRequiredOptionsCount());
+			publishedItemText.setAddedButNotExtracted(itemText.isAddedButNotExtracted());
 			h.add(publishedItemText);
 		}
 		return h;
@@ -447,8 +453,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 		while (o.hasNext()) {
 			ItemFeedback itemFeedback = (ItemFeedback) o.next();
 			PublishedItemFeedback publishedItemFeedback = new PublishedItemFeedback(
-					publishedItem, itemFeedback.getTypeId(), itemFeedback
-							.getText());
+					publishedItem, itemFeedback.getTypeId(), itemFeedback.getText(), itemFeedback.getTextValue());
 			h.add(publishedItemFeedback);
 		}
 		return h;
@@ -814,76 +819,38 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 		return new PublishedAssessmentFacade(publishedAssessment);
 	}
 
-	public void createAuthorization(PublishedAssessmentData p) {
-		// conditional processing
-		if (p.getAssessmentAccessControl().getReleaseTo()!= null 
-				&& p.getAssessmentAccessControl().getReleaseTo()
-				.equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
+	@Override
+    public void createAuthorization(PublishedAssessmentData p) {
+		// conditional processing for groups
+		if (p.getAssessmentAccessControl().getReleaseTo() != null
+				&& p.getAssessmentAccessControl().getReleaseTo().equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
 			createAuthorizationForSelectedGroups(p);
 			return;
 		}
-		
-		String qualifierIdString = p.getPublishedAssessmentId().toString();
-		Vector v = new Vector();
 
-		// 1. get all possible publishing targets (agentKey, agentId)
-		PublishingTargetHelper ptHelper = IntegrationContextFactory
-				.getInstance().getPublishingTargetHelper();
-
-		HashMap targets = ptHelper.getTargets();
-		// Fixed for SAK-7251
-		HashMap trimedTargets = new HashMap();
-
-		for (Iterator it = targets.entrySet().iterator(); it.hasNext();) {
-			   Map.Entry entry = (Map.Entry) it.next();
-			   String key = (String)entry.getKey();
-			   String value = (String)entry.getValue();
-			   trimedTargets.put(key.trim(), value);
- 			}
-		
-		// 2. get the key of the target selected, it is stored in
-		// accessControl.releaseTo
+		// We are only dealing with ANON or the site here! Groups is handled above!
 		AssessmentAccessControlIfc control = p.getAssessmentAccessControl();
-		String releaseTo = control.getReleaseTo();
-		if (releaseTo != null) {
-			String [] targetSelected = new String[1];
-			targetSelected[0] = releaseTo;
-			for (int i = 0; i < targetSelected.length; i++) {
-				String agentKey = targetSelected[i].trim();
-				// add agentId into v
-				if (trimedTargets.get(agentKey) != null) {
-					v.add((String) trimedTargets.get(agentKey));
-				}
-			}
-		}
+		String s = (control.getReleaseTo() != null && control.getReleaseTo().trim().equalsIgnoreCase("Anonymous Users")) ? "ANONYMOUS_USERS" : AgentFacade.getCurrentSiteId();
+
 		// 3. give selected site right to view Published Assessment
+		final String qualifierIdString = p.getPublishedAssessmentId().toString();
 		PersistenceService.getInstance().getAuthzQueriesFacade()
-				.createAuthorization(AgentFacade.getCurrentSiteId(),
-						"OWN_PUBLISHED_ASSESSMENT", qualifierIdString);
-		// 4. create authorization for all the agentId in v
-		for (int i = 0; i < v.size(); i++) {
-			String agentId = (String) v.get(i);
-			log.debug("** agentId=" + agentId);
-			PersistenceService.getInstance().getAuthzQueriesFacade()
-					.createAuthorization(agentId, "TAKE_PUBLISHED_ASSESSMENT",
-							qualifierIdString);
-			PersistenceService.getInstance().getAuthzQueriesFacade()
-					.createAuthorization(agentId,
-							"VIEW_PUBLISHED_ASSESSMENT_FEEDBACK",
-							qualifierIdString);
-			PersistenceService.getInstance().getAuthzQueriesFacade()
-					.createAuthorization(agentId, "GRADE_PUBLISHED_ASSESSMENT",
-							qualifierIdString);
-			PersistenceService.getInstance().getAuthzQueriesFacade()
-					.createAuthorization(agentId, "VIEW_PUBLISHED_ASSESSMENT",
-							qualifierIdString);
-		}
-		
+				.createAuthorization(AgentFacade.getCurrentSiteId(), "OWN_PUBLISHED_ASSESSMENT", qualifierIdString);
+
+		// 4. create authorization for the target
+		log.debug("** agentId={}", s);
+		PersistenceService.getInstance().getAuthzQueriesFacade()
+				.createAuthorization(s, "TAKE_PUBLISHED_ASSESSMENT", qualifierIdString);
+		PersistenceService.getInstance().getAuthzQueriesFacade()
+				.createAuthorization(s, "VIEW_PUBLISHED_ASSESSMENT_FEEDBACK", qualifierIdString);
+		PersistenceService.getInstance().getAuthzQueriesFacade()
+				.createAuthorization(s, "GRADE_PUBLISHED_ASSESSMENT", qualifierIdString);
+		PersistenceService.getInstance().getAuthzQueriesFacade()
+				.createAuthorization(s, "VIEW_PUBLISHED_ASSESSMENT", qualifierIdString);
 	}
 	
 	/**
 	 * Creates Authorizations for Selected Groups
-	 * @param p
 	 */
 	public void createAuthorizationForSelectedGroups(PublishedAssessmentData publishedAssessment) {
 	    AuthzQueriesFacadeAPI authz = PersistenceService.getInstance().getAuthzQueriesFacade();
@@ -891,13 +858,11 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 		authz.createAuthorization(AgentFacade.getCurrentSiteId(), "OWN_PUBLISHED_ASSESSMENT", qualifierIdString);
 		authz.createAuthorization(AgentFacade.getCurrentSiteId(), "VIEW_PUBLISHED_ASSESSMENT", qualifierIdString);
 
-	    List authorizationsToCopy = authz.getAuthorizationByFunctionAndQualifier("TAKE_ASSESSMENT", publishedAssessment.getAssessmentId().toString());
-	    if (authorizationsToCopy != null && authorizationsToCopy.size()>0) {
-			 Iterator authsIter = authorizationsToCopy.iterator();
-			 while (authsIter.hasNext()) {
-				 AuthorizationData adToCopy = (AuthorizationData) authsIter.next();
-     			 authz.createAuthorization(adToCopy.getAgentIdString(), "TAKE_PUBLISHED_ASSESSMENT", publishedAssessment.getPublishedAssessmentId().toString());
-			 }
+	    List<AuthorizationData> authorizationsToCopy = authz.getAuthorizationByFunctionAndQualifier("TAKE_ASSESSMENT", publishedAssessment.getAssessmentId().toString());
+	    if (authorizationsToCopy != null && !authorizationsToCopy.isEmpty()) {
+            for (AuthorizationData adToCopy : authorizationsToCopy) {
+                authz.createAuthorization(adToCopy.getAgentIdString(), "TAKE_PUBLISHED_ASSESSMENT", publishedAssessment.getPublishedAssessmentId().toString());
+            }
 	    }
 	}
 	
@@ -910,10 +875,9 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 	public PublishedAssessmentData loadPublishedAssessment(Long assessmentId) {
 		PublishedAssessmentData ret = null;
 		try {
-			ret = (PublishedAssessmentData) getHibernateTemplate().load(
-					PublishedAssessmentData.class, assessmentId);
+			ret = getHibernateTemplate().get(PublishedAssessmentData.class, assessmentId);
 		} catch (DataAccessException e) {
-			log.warn("Error accessing Published Assesment: " + assessmentId + " storage returned: " + e);
+			log.warn("could not access published assessment [{}], {}", assessmentId, e.toString());
 		}
 		return ret;
 	}
@@ -1427,30 +1391,58 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 
 		List<PublishedAssessmentFacade> pubList = new ArrayList<>();
 		Map groupsForSite = null;
-		Map releaseToGroups;
+		Map releaseToGroups = new HashMap();
 		String lastModifiedBy = "";
 		AgentFacade agent = null;
-
+		Long assessmentId;
+		String userId = AgentFacade.getAnonymousId();
+		GradingSectionAwareServiceAPI service = new GradingSectionAwareServiceImpl();
+		Site site = null;
+		Collection<Group> siteGroups = new ArrayList<>();
+		Set<String> keysGroupIdsMap = new HashSet<>();
+		try {
+			site = siteService.getSite(siteAgentId);
+			siteGroups = site.getGroupsWithMember(userId);
+			Map<String, String> groupIdsMap = siteGroups.stream()
+				.collect(Collectors.toMap(Group::getId, Group::getId));
+			keysGroupIdsMap = groupIdsMap.keySet();
+		} catch (IdUnusedException ex) {
+			// no site found, just log a warning
+			log.warn("Unable to find a site with id ({}) in order to get the enrollments, will return 0 enrollments", siteAgentId);
+		}
 		for (PublishedAssessmentData p : list) {
 			releaseToGroups = null;
 			if (p.getReleaseTo().equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
 				if (groupsForSite == null) {
 					groupsForSite = getGroupsForSite(siteAgentId);
 				}
-				Long assessmentId = p.getPublishedAssessmentId();
+				assessmentId = p.getPublishedAssessmentId();
 				releaseToGroups = getReleaseToGroups(groupsForSite, assessmentId);
 			}
-			
 
 			agent = new AgentFacade(p.getLastModifiedBy());
 			if (agent != null) {
 				lastModifiedBy = agent.getDisplayName();
 			}
 
-			PublishedAssessmentFacade f = new PublishedAssessmentFacade(p.getPublishedAssessmentId(), p.getTitle(),
-					p.getReleaseTo(), p.getStartDate(), p.getDueDate(), p.getRetractDate(), p.getStatus(), releaseToGroups, 
-					p.getLastModifiedDate(), lastModifiedBy, p.getLateHandling(), p.getUnlimitedSubmissions(), p.getSubmissionsAllowed());
-			pubList.add(f);
+			if (releaseToGroups != null) {
+				Set<String> keysReleaseToGroups = releaseToGroups.keySet();
+
+				Set<String> commonKeys = new HashSet<>(keysReleaseToGroups);
+				commonKeys.retainAll(keysGroupIdsMap);
+
+				if (!commonKeys.isEmpty() || (siteGroups.isEmpty() && service.isUserAbleToGradeAll(site.getId(), userId))) {
+					PublishedAssessmentFacade f = new PublishedAssessmentFacade(p.getPublishedAssessmentId(), p.getTitle(),
+							p.getReleaseTo(), p.getStartDate(), p.getDueDate(), p.getRetractDate(), p.getStatus(), releaseToGroups, 
+							p.getLastModifiedDate(), lastModifiedBy, p.getLateHandling(), p.getUnlimitedSubmissions(), p.getSubmissionsAllowed());
+					pubList.add(f);
+				}
+			} else {
+				PublishedAssessmentFacade f = new PublishedAssessmentFacade(p.getPublishedAssessmentId(), p.getTitle(),
+						p.getReleaseTo(), p.getStartDate(), p.getDueDate(), p.getRetractDate(), p.getStatus(), releaseToGroups, 
+						p.getLastModifiedDate(), lastModifiedBy, p.getLateHandling(), p.getUnlimitedSubmissions(), p.getSubmissionsAllowed());
+				pubList.add(f);
+			}
 		}
 		return pubList;
 	}
@@ -1711,13 +1703,15 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 	public boolean hasRandomPart(final Long publishedAssessmentId) {
 		final String key = SectionDataIfc.AUTHOR_TYPE;
 		final String value = SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString();
+		final String valueMultiple = SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOLS.toString();
 
 		final HibernateCallback<List<PublishedSectionData>> hcb = session -> session
 				.createQuery("select s from PublishedSectionData s, PublishedSectionMetaData m " +
-						"where s = m.section and s.assessment.publishedAssessmentId = :id and m.label = :key and m.entry = :value")
+						"where s = m.section and s.assessment.publishedAssessmentId = :id and m.label = :key and (m.entry = :value or m.entry = :valueMultiple)")
 				.setParameter("id", publishedAssessmentId.longValue())
 				.setParameter("key", key)
 				.setParameter("value", value)
+				.setParameter("valueMultiple", valueMultiple)
 				.list();
 		List<PublishedSectionData> l = getHibernateTemplate().execute(hcb);
 
@@ -1733,14 +1727,16 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 		}
 		final String key = SectionDataIfc.AUTHOR_TYPE;
 		final String value = SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString();
+		final String entryMultiple = SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOLS.toString();
 
 		final HibernateCallback<List<Long>> hcb = session -> session
 				.createQuery("select s.assessment.publishedAssessmentId " +
 						"from PublishedSectionData s, PublishedSectionMetaData m " +
-						"where s.assessment.publishedAssessmentId in (:ids) and s = m.section and m.label = :label and m.entry = :entry " +
+						"where s.assessment.publishedAssessmentId in (:ids) and s = m.section and m.label = :label and (m.entry = :entry or m.entry = :entryMultiple)" +
 						"group by s.assessment.publishedAssessmentId")
 				.setParameter("label", key)
 				.setParameter("entry", value)
+				.setParameter("entryMultiple", entryMultiple)
 				.setParameterList("ids", assessmentIds)
 				.list();
 		return getHibernateTemplate().execute(hcb);
@@ -1883,6 +1879,28 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 	public boolean isRandomDrawPart(final Long publishedAssessmentId, final Long sectionId) {
 		final String key = SectionDataIfc.AUTHOR_TYPE;
 		final String value = SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString();
+		final String valueMultiple = SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOLS.toString();
+
+		final HibernateCallback<List<PublishedSectionData>> hcb = session -> session
+				.createQuery("select s from PublishedSectionData s, PublishedSectionMetaData m " +
+						" where s = m.section and s.assessment.publishedAssessmentId = :id and s.id = :section and m.label = :key and (m.entry = :value or m.entry = :valueMultiple)")
+				.setParameter("id", publishedAssessmentId)
+				.setParameter("section", sectionId)
+				.setParameter("key", key)
+				.setParameter("value", value)
+				.setParameter("valueMultiple", valueMultiple)
+				.list();
+		List<PublishedSectionData> l = getHibernateTemplate().execute(hcb);
+
+		if (!l.isEmpty()) {
+			return true;
+		}
+		return false;
+	}
+
+	public boolean isFixedRandomDrawPart(final Long publishedAssessmentId, final Long sectionId) {
+		final String key = SectionDataIfc.AUTHOR_TYPE;
+		final String value = SectionDataIfc.FIXED_AND_RANDOM_DRAW_FROM_QUESTIONPOOL.toString();
 
 		final HibernateCallback<List<PublishedSectionData>> hcb = session -> session
 				.createQuery("select s from PublishedSectionData s, PublishedSectionMetaData m " +
@@ -1894,10 +1912,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 				.list();
 		List<PublishedSectionData> l = getHibernateTemplate().execute(hcb);
 
-		if (!l.isEmpty()) {
-			return true;
-		}
-		return false;
+		return (!l.isEmpty());
 	}
 
 	/**
@@ -2582,7 +2597,8 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 						  "from PublishedEvaluationModel em, AuthorizationData a " +
 						  "where a.functionId = 'OWN_PUBLISHED_ASSESSMENT' " +
 						  "and em.assessment.publishedAssessmentId = a.qualifierId " +
-						  "and em.toGradeBook = '1'")
+						  "and (em.toGradeBook = '1' or em.toGradeBook = :gradebook)")
+				  .setString("gradebook",  EvaluationModelIfc.TO_SELECTED_GRADEBOOK.toString())
 				  .list();
 
 		  List<Object[]> l = getHibernateTemplate().execute(hcb);

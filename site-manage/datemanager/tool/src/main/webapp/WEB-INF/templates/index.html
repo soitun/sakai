@@ -21,11 +21,11 @@
     <script th:src="@{/js/initDatePicker.js}"></script>
     <meta http-equiv="Content-Style-Type" content="text/css" />
 
-    <div>
+    <div class="page-header border-bottom">
       <h1 th:text="#{page.instructions}">Add/Edit Options in batch</h1>
     </div>
 
-    <div class="date-manager-shifter">
+    <div class="date-manager-shifter mb-3">
       <p>
         <div class="sak-banner-error d-none" id="dateShifterError">
           <span th:text="#{dateshifter.error.nonnumeric}"></span>
@@ -36,8 +36,10 @@
           <span th:text="#{dateshifter.label.after}" th:remove="tag"></span>
         </label>
       </p>
-      <button id="shiftAllDates" th:text="#{dateshifter.all.button}" disabled></button>
-      <button id="shiftVisibleDates" th:text="#{dateshifter.visible.button}" disabled></button>
+      <button class="btn btn-link m-2" id="shiftAllDates" th:text="#{dateshifter.all.button}" disabled></button>
+      <button class="btn btn-link m-2" id="shiftVisibleDates" th:text="#{dateshifter.visible.button}" disabled></button>
+      <a id="exportDates" class="btn btn-default" th:text="#{dateshifter.export.dates.csv}" th:href="@{/date-manager/export}">Export Dates</a>
+      <a id="importDates" class="btn btn-default" th:text="#{dateshifter.import.dates.csv}" th:href="@{/date-manager/page/import}">Import Dates</a>
     </div>
 
     <form id="date-manager-form" method="POST">
@@ -50,8 +52,19 @@
         <span th:text="#{success.message}">The dates were updated successfully.</span>
       </div>
 
+      <div class="sak-banner-info d-none" id="export-success">
+        <span th:text="#{success.export}">The dates were exported successfully. Please note the following considerations:</span>
+        <ul class="m-0">
+          <li th:text="#{success.export.1}">The fields marked as required cannot be left blank.</li>
+          <li th:text="#{success.export.2}">The fields marked as optional can be left blank.</li>
+          <li th:text="#{success.export.3}">The fields not marked as required or optional can only be modified if they already have a value or left blank if they do not.</li>
+          <li th:text="#{success.export.4}">Only modify the date fields. Do not modify the rest of the fields.</li>
+          <li th:text="#{success.export.5}">Do not change the date format.</li>
+        </ul>
+      </div>
+
       <div th:if="${assignments != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-assignments" class="collapsed" aria-expanded="false"><span th:text="${assignmentsToolTitle}">Assignments</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -59,7 +72,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${assignments}, toolId='assignments', collapseId='collapse-assignments')"></div>
       </div>
       <div th:if="${assessments != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-assessments" class="collapsed" aria-expanded="false"><span th:text="${assessmentsToolTitle}">Tests & Quizzes</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -67,7 +80,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${assessments}, toolId='assessments', collapseId='collapse-assessments')"></div>
       </div>
       <div th:if="${signupMeetings != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-signup" class="collapsed" aria-expanded="false"><span th:text="${signupMeetingsToolTitle}">Sign up</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -75,7 +88,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${signupMeetings}, toolId='signupMeetings', collapseId='collapse-signup')"></div>
       </div>
       <div th:if="${gradebookItems != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-gradebook" class="collapsed" aria-expanded="false"><span th:text="${gradebookItemsToolTitle}">Gradebook</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -83,7 +96,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${gradebookItems}, toolId='gradebookItems', collapseId='collapse-gradebook')"></div>
       </div>
       <div th:if="${resources != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-resources" class="collapsed" aria-expanded="false"><span th:text="${resourcesToolTitle}">Resources</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -91,7 +104,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${resources}, toolId='resources', collapseId='collapse-resources')"></div>
       </div>
       <div th:if="${calendarEvents != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-calendar" class="collapsed" aria-expanded="false"><span th:text="${calendarEventsToolTitle}">Calendar</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -99,7 +112,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${calendarEvents}, toolId='calendarEvents', collapseId='collapse-calendar')"></div>
       </div>
       <div th:if="${forums != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-forums" class="collapsed" aria-expanded="false"><span th:text="${forumsToolTitle}">Forums</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -107,7 +120,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${forums}, toolId='forums', collapseId='collapse-forums')"></div>
       </div>
       <div th:if="${announcements != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-announcements" class="collapsed" aria-expanded="false"><span th:text="${announcementsToolTitle}">Announcements</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -115,7 +128,7 @@
         <div th:replace="tool_fragment :: tool_fragment(items=${announcements}, toolId='announcements', collapseId='collapse-announcements')"></div>
       </div>
       <div th:if="${lessons != null}" class="card">
-        <div class="card text-center bg-light">
+        <div class="card-header">
           <h4 class="card-title">
             <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-lessons" class="collapsed" aria-expanded="false"><span th:text="${lessonsToolTitle}">Lessons</span><span class="allocatedSpinPlaceholder"></span></a>
           </h4>
@@ -124,16 +137,23 @@
       </div>
 
       <div class="act">
-        <input type="submit" class="active" th:value="#{button.save}" id="submit-form-button" disabled="disabled" />
-        <a href="#" id="datemanager-cancel" class="btn btn-secondary" th:text="#{button.cancel}">Cancel</a>
+        <button class="btn btn-primary"
+            aria-controls="modal-confirm"
+            id="submit-form-button"
+            th:text="#{button.save}"
+            disabled>
+        </button>
+        <button type="button" class="btn btn-link" id="datemanager-cancel" th:text="#{button.cancel}">Cancel</button>
       </div>
 
-      <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" id="modal-confirm">
+      <span id="datemanager-confirm-description" class="visually-hidden" th:text="#{modal.confirm.description}"></span>
+
+      <div class="modal fade" tabindex="-1" aria-hidden="true" aria-labelledby="datemanager-confirm-title" aria-describedby="datemanager-confirm-description" id="modal-confirm">
         <div class="modal-dialog modal-md">
           <div class="modal-content">
             <div class="modal-header">
+              <h5 id="datemanager-confirm-title" th:text="#{modal.confirm}" class="modal-title">Confirm</h5>
               <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              <h4 th:text="#{modal.confirm}" class="modal-title">Confirm</h4>
             </div>
             <div class="modal-body">
               <p th:text="#{modal.confirm.instruction}">You are about to modify the following course dates:</p>
@@ -257,18 +277,25 @@
             $('#form-errors').removeClass('d-none');
             $('#form-errors').find('ul').empty();
             $('#form-success').addClass('d-none');
+            $('#export-success').addClass('d-none');
             $(errors).each(function (idx, elt) {
               var id = ['cell', elt.toolId, elt.field, elt.idx].join('_');
               var $cell = $('#' + id);
               $cell.addClass('ajax-error');
               $cell.find('.errors').text(elt.msg);
-              $('#form-errors').find('ul').append('<li>' + elt.toolTitle + ' - ' + elt.msg + '</li>');
+              if ('toolTitle' in elt) {
+                $('#form-errors').find('ul').append('<li>' + elt.toolTitle + ' - ' + elt.msg + '</li>');
+              } else {
+                $('#form-errors').find('ul').append('<li>' + elt + '</li>');
+              }
             });
             $('html, body').animate({ scrollTop: 0 }, 'slow');
           }
 
           function printSuccess() {
+
             $('#form-success').removeClass('d-none').css('display', '');
+            $('#export-success').addClass('d-none').css('display', '');
             $('#form-errors').addClass('d-none');
             $('.ajax-error').removeClass('ajax-error');
             $('.errors').each(function(idx, elt) {
@@ -307,14 +334,14 @@
               });
             });
 
-            $('#modal-btn-confirm').on('click', function(){
+            $('#modal-btn-confirm').on('click', function () {
               callback(true);
-                            bootstrap.Modal.getOrCreateInstance(document.getElementById("modal-confirm")).hide();
+              bootstrap.Modal.getOrCreateInstance(document.getElementById("modal-confirm")).hide();
             });
 
-            $('#modal-btn-cancel').on('click', function(){
+            $('#modal-btn-cancel').on('click', function () {
               callback(false);
-                            bootstrap.Modal.getOrCreateInstance(document.getElementById("modal-confirm")).hide();
+              bootstrap.Modal.getOrCreateInstance(document.getElementById("modal-confirm")).hide();
             });
           };
 
@@ -336,7 +363,8 @@
             var json = '{"assignments": ' + assignmentsStr + ', "assessments": ' + assessmentsStr + ', "gradebookItems": ' + gradebookStr + ', "signupMeetings": ' + signupStr + ', "resources": ' + resourcesStr + ', "calendarEvents": ' + calendarStr + ', "forums": ' + forumsStr + ', "announcements": ' + announcementsStr + ', "lessons": ' + lessonsStr + '}';
 
             $.ajax({
-              url: window.location + '/date-manager/update',
+              // This replace is here to remove any anchor from the end of the URL
+              url: window.location.href.replace(/#.*$/, '') + '/date-manager/update',
               processData: false,
               dataType : 'json',
               contentType: 'application/json; charset=utf-8',
@@ -351,6 +379,12 @@
                 } else {
                   printSuccess();
                 }
+              },
+              error: function(xhr, textStatus, errorThrown) {
+                  const parser = new DOMParser();
+                  const responseDoc = parser.parseFromString(xhr.responseText, 'text/html');
+                  errors = [responseDoc.body.innerHTML];
+                  printErrors();
               }
             });
           }
@@ -358,6 +392,16 @@
           $('#datemanager-cancel').click(function(e) {
             e.preventDefault;
             window.location = window.location.href.replace('/sakai.datemanager.helper', '');
+          });
+
+          
+          $('#exportDates').click(function(e) {
+            $.ajax({
+              url: window.location + '/date-manager/export',
+              method: 'GET'
+            });
+            $('#export-success').removeClass('d-none').css('display', '');
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
           });
         });
       /*]]>*/

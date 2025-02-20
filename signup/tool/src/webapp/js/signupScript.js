@@ -473,7 +473,7 @@
 				if(mutiplBoxTag)
 					mutiplBoxTag.className="mi";
 				if(singleBoxTag)
-					singleBoxTag.className="si";
+					singleBoxTag.className="single-box";
 					
 				showDTimeInputFields('enabled');
 				createEditTSBttn.style.display="none";
@@ -484,11 +484,11 @@
 	function isShowEmailChoice(){
 		var emailChoiceTag = document.getElementById('meeting:emailChoice');
 		var emailAttendeeOnlyTag = document.getElementById('meeting:emailAttendeeOnly');
-		var emailAttendeeInputs = emailAttendeeOnlyTag.getElementsByTagName('input');
 
 		if(!emailChoiceTag || !emailAttendeeOnlyTag)
 			return;
 
+		var emailAttendeeInputs = emailAttendeeOnlyTag.getElementsByTagName('input');
 		var i = 0, input;
 		while (input = emailAttendeeInputs[i++]) {
 			input.disabled = !emailChoiceTag.checked;

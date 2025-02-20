@@ -11,17 +11,13 @@
 		<script>includeLatestJQuery("msgcntr");</script>
 		<script src="/messageforums-tool/js/sak-10625.js"></script>
 		<script src="/messageforums-tool/js/forum.js"></script>
-		<script src="/webcomponents/rubrics/sakai-rubrics-utils.js<h:outputText value="#{ForumTool.CDNQuery}" />"></script>
-		<script type="module" src="/webcomponents/rubrics/rubric-association-requirements.js<h:outputText value="#{ForumTool.CDNQuery}" />"></script>
+		<script type="module" src="/webcomponents/bundles/rubric-association-requirements.js<h:outputText value="#{ForumTool.CDNQuery}" />"></script>
 		<script>
 			$(document).ready(function() {
 				var menuLink = $('#forumsMainMenuLink');
 				var menuLinkSpan = menuLink.closest('span');
 				menuLinkSpan.addClass('current');
 				menuLinkSpan.html(menuLink.text());
-
-				setupLongDesc();
-
 			});
 		</script>
 <!--jsp/discussionForum/forum/dfForumDetail.jsp-->

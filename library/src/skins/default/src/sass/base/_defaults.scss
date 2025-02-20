@@ -8,46 +8,10 @@ body{
   font-weight: $default-font-weight;
   line-height: $default-line-height;
   scroll-behavior: $scroll-behavior;
-  #maximised-indicator {
-    position: fixed;
-    overflow: hidden;
-    display: none;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    z-index: 100000;
-    div {
-      background-color: var(--sakai-background-color-2);
-      padding: 7px;
-      border: 1px solid var(--button-border-color);
-      border-width: 0 2px 2px 2px;
-      border-radius: 0 0 6px 6px;
-
-      a {
-        font-weight: bold;
-        margin-right: 5px;
-                text-decoration: none;
-      }
-    }
-  }
-  &.tool-maximised {
-    #maximised-indicator {
-      display: block;
-    }
-  }
 }
 
-sakai-maximise-button {
-  @media #{$phone} {
-    display: none;
-  }
-
-  body.tool-maximised & {
-    .#{$namespace}toolTitleNav__link {
-      @extend .btn;
-      @extend .btn-primary;
-    }
-  }
+.progress {
+  background-color: var(--sakai-background-color-4);
 }
 
 a{
@@ -56,7 +20,7 @@ a{
     color: var(--sakai-text-color-1);
     text-decoration: none;
   }
-  &[href]:not(.btn) {  // This means a[href]
+  &[href] {  // This means a[href]. Do not make this selector more specific.
     color: var(--link-color);
     &:focus{
       outline: $sakai-focus-outline;
@@ -73,13 +37,15 @@ a{
       background-color: var(--link-active-background-color);
       outline: 0;   // no focus outline on click
     }
-    &.btn{
-      text-decoration: none;
+    &.btn{ // Extend the Bootstrap button style to links
+      @extend .btn;
     }
     &.btn-primary{
       @include sakai_primary_button();
     }
-    text-decoration: none;  // TODO
+    &.page-link{ // Extend the pagination link style
+      @extend .page-link;
+    }
   }
   &.url{
     @media #{$phone}{
@@ -90,6 +56,24 @@ a{
       white-space: nowrap;
     }
   }
+}
+
+.dropdown-menu > li > a {
+  text-decoration: none;
+}
+
+.dropdown-menu > li:hover,
+.dropdown-menu > li:focus {
+  background-color: var(--sakai-background-color-4);
+
+  button.dropdown-item {
+    background-color: var(--sakai-background-color-4);
+    color: var(--link-hover-color);
+  }
+}
+
+button.dropdown-item {
+  color: var(--link-color);
 }
 
 input, textarea{
@@ -132,6 +116,18 @@ h3{
 
 h4{
   font-size: #{$default-font-size + 2};
+}
+
+h5{
+  font-size: #{$default-font-size};
+}
+
+h6{
+  font-size: #{$default-font-size - 2};
+}
+
+h3.popover-header {
+  margin-top: 0;
 }
 
 .skip{
@@ -188,12 +184,22 @@ input[type="checkbox"]{
     background-repeat: no-repeat;
     background-position: 1px 1px;
   }
+  &:disabled{
+    cursor: not-allowed;
+    &:not(:checked) {
+      background-color: var(--sakai-background-color-3);
+    }
+  }
 }
 input[type="radio"]{
   @include border-radius(24px);
   &:checked{
     background: var(--radio-button-background); // fallback support
     background: radial-gradient(circle at center, var(--radio-button-background) 0%, var(--radio-button-background) 48%, var(--sakai-background-color-1) 58%);
+  }
+  &:disabled{
+    cursor: not-allowed;
+    background-color: var(--sakai-background-color-3);
   }
 }
 
@@ -286,27 +292,38 @@ button.icon-button {
   }
 }
 
-.sakai-user-photo {
-    min-width: 32px;
-    max-width: 32px;
-    height: 32px;
-    float: left;
-    position: relative;
-    background-position: 50%;
-    background-size: auto 100%;
-    border-radius: 50%;
-
-    span {
-        background-color: var(--sakai-user-status-online);
-        height: 12px;
-        width: 12px;
-        position: absolute;
-        bottom: -2px;
-        border-radius: 6px;
-        right: -2px;
-    }
-}
-
 .Mrphs-pageColumns--single .Mrphs-container {
     margin: 0 16px;
+}
+
+// Bootstrap-5 Accordion styles
+.accordion-header {
+  margin: 0; 
+}
+
+.accordion-item {
+  background-color: var(--site-nav-bg);
+  color: var(--sakai-text-color);
+  border: 1px solid var(--tool-border-color);
+  .accordion-button {
+    color: var(--sakai-text-color-1);
+    background-color: var(--site-nav-bg);
+    &::after {
+      color: var(--sakai-text-color-1);
+    }
+    &:not(.collapsed) {
+      background-color: var(--sakai-background-color-3);
+    }
+  }
+}
+
+.accordion-collapse {
+  background-color: var(--sakai-background-color-1);
+}
+
+// Changed hidden class in Bootstrap 5 to d-none.
+// I updated all instances, but may have missed some.
+// Adding this to ensure all hidden classes are hidden.
+.hidden {
+  display: none !important;
 }

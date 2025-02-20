@@ -16,15 +16,19 @@
 package org.sakaiproject.portal.api.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.sakaiproject.portal.api.model.PinnedSite;
 import org.sakaiproject.springframework.data.SpringCrudRepository;
 
 public interface PinnedSiteRepository extends SpringCrudRepository<PinnedSite, Long> {
 
-    List<PinnedSite> findByUserId(String userId);
+    List<PinnedSite> findByUserIdOrderByPosition(String userId);
+    List<PinnedSite> findByUserIdAndHasBeenUnpinnedOrderByPosition(String userId, boolean hasBeenUnpinned);
+    Optional<PinnedSite> findByUserIdAndSiteId(String userId, String siteId);
     List<PinnedSite> findBySiteId(String siteId);
     Integer deleteByUserId(String userId);
     Integer deleteBySiteId(String siteId);
     Integer deleteByUserIdAndSiteId(String userId, String siteId);
+    Integer deleteByUserIdAndSiteIds(String userId, List<String> siteIds);
 }

@@ -10,7 +10,7 @@
     <parent>
         <artifactId>commons</artifactId>
         <groupId>org.sakaiproject.commons</groupId>
-        <version>24-SNAPSHOT</version>
+        <version>25-SNAPSHOT</version>
     </parent>
 
     <packaging>war</packaging>
@@ -80,12 +80,6 @@
             <groupId>taglibs</groupId>
             <artifactId>standard</artifactId>
             <version>1.1.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>xalan</groupId>
-                    <artifactId>xalan</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 

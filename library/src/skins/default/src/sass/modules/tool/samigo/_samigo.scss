@@ -48,9 +48,34 @@
 			input[type="checkbox"], input[type="radio"] {
 				margin-right: 0.25em;
 			}
-			label {
-				font-weight: normal;
-			}
+	}
+
+	.samigo-question-cancelled {
+		opacity: 0.7;
+
+		.sak-banner-info {
+			margin-bottom: 0;
+		}
+	}
+
+	.cancelled-question-link {
+		opacity: 0.7;
+		text-decoration: line-through;
+		font-style: oblique;
+
+		&:hover {
+			text-decoration: line-through underline;
+		}
+	}
+
+	.question-cancel-modal {
+		input[type="checkbox"] {
+			margin-right: $standard-space;
+		}
+
+		.act {
+			margin: unset;
+		}
 	}
 
 	.listNav {
@@ -121,6 +146,10 @@
 			padding: 0 0 0 0;
 		}
 	}
+	ul.ulTimed{
+		list-style: none;
+		padding: 0 0 0 0;
+	}
 	.mcscFixUp > ul,.question-wrapper{
 		list-style: none;
 		padding: 0 0 0 0;
@@ -182,7 +211,8 @@
 	}
 	
 	#assessmentSettingsAction input[type="radio"],
-	#assessmentSettingsAction input[type="checkbox"]{
+	#assessmentSettingsAction input[type="checkbox"],
+	.ulTimed input[type="radio"]{
 		margin-right: $standard-space; 
 		
 		@media #{$tablet}{
@@ -211,14 +241,23 @@
 	}
 
 	table{
-	   	td{
-	   		input[type="checkbox"],input[type="radio"]{
-	   			margin-right: $standard-space;
-	   		}
-	   	}
-	   	&.listHier td:empty{
-   			padding: 0;
-   		}
+		td {
+			input[type="checkbox"],input[type="radio"] {
+				margin-right: $standard-space;
+			}
+		}
+		&.samigo-question-info td.navList,
+		&.samigo-question-info td.navView {
+			border-bottom-width: 0;
+			border-top-width: 1px;
+		}
+		&.listHier td:empty {
+			padding: 0;
+		}
+		@media #{$phone} {
+			overflow-x: auto;
+			display: block;
+		}
 	}
 	
 	#samLiteEntryForm\:data{
@@ -283,6 +322,10 @@
 		height: 34px;
 		margin-top: -3px;
 		margin-left: -3px;
+	}
+
+	.navIntraToolLink {
+		margin-bottom: 15px;
 	}
 
 	.dataTables_wrapper {
@@ -350,6 +393,10 @@
 				}
 			}
 
+			.active > .page-link {
+				border-color: unset !important; /* Use  of !important to override Bootstrap's styles. */
+			}
+
 			.ellipsis {
 				margin-right: 10px;
 			}
@@ -379,18 +426,6 @@
 						bottom: 2px;
 						right: -14px;
 					}
-				}
-			}
-
-			.sorting_asc {
-				a::after {
-					background: url(/library/image/sakai/sortascending.gif?panel=Main);
-				}
-			}
-
-			.sorting_desc {
-				a::after {
-					background: url(/library/image/sakai/sortdescending.gif?panel=Main);
 				}
 			}
 		}
@@ -463,12 +498,43 @@
 		}
 	}
 
-	input[type="text"].hasDatepicker {
-		margin: 0 4px 4px 0;
-	}
-
 	sakai-user-photo {
 		margin-right: 7px;
+	}
+
+	.mcAnswerText {
+		display:inline;
+		float:unset;
+
+		label, .samigo-answer-label, .samigo-answer-text {
+			font-weight: normal;
+		}
+
+		/* Someone put a paragraph in a multiple choice answer */
+		p:first-child {
+			display: inline;
+			margin: 0 0 1em 0;
+		}
+	}
+
+	.tableTF label {
+		font-weight: normal;
+	}
+
+	.time-bar-container {
+		margin-top: 1em;
+	}
+	
+	.time-bar-button-container{
+		margin-top: 1em;
+		margin-bottom: 1em;
+	}
+
+	.tableofcontents {
+		label {
+			padding-left: 5px;
+			cursor:pointer;
+		}
 	}
 }
 
@@ -483,8 +549,14 @@
 				.form-control {
 					@include border-radius(0 $button-radius 0 0);
 				}
+				.form-control-center {
+					@include border-radius(0);
+				}
 			}
 
+			p.input-group-addon.input-group-addon-right {
+				@include border-radius(0 $button-radius 0 0);
+			}
 			&:last-of-type {
 				.input-group-addon {
 					@include border-radius(0 0 $button-radius $button-radius);
@@ -503,18 +575,28 @@ table.table-bordered.dataTable {
     border-right-width: 0;
     border: 1px solid #dee2e6 !important;
     border-collapse: collapse !important;
+	tr table.checkboxTable td {
+		border: 0;
+	}
 }
 
-.input-group-addon {
+.input-group-addon, .samigo-input-group-addon, .samigo-input-group-text {
     padding: 6px 12px;
     font-size: 14px;
     font-weight: normal;
-    line-height: 1;
     color: var(--sakai-text-color-1);
     text-align: center;
     background-color: var(--sakai-background-color-2);
     border: 1px solid var(--sakai-border-color);
     border-radius: 4px;
+}
+
+.input-group-addon, .samigo-input-group-addon, .samigo-input-group-text, .input-group input {
+    height: 35px;
+}
+
+.samigo-input-group-addon {
+    width: inherit;
 }
 
 .text-danger {
@@ -531,4 +613,10 @@ table.table-bordered.dataTable {
 .or-line span {
     background:#fff;
     padding:0 10px;
+}
+
+.samigo-breadcrumb {
+	background-color: var(--sakai-background-color-2);
+	border-radius: 4px;
+	padding: 8px 15px;
 }

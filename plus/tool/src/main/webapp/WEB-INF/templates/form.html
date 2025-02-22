@@ -28,23 +28,13 @@
         <div id="issuer-group" class="form-group form-control-required">
           <label for="issuer" class="form-control-label" th:text="#{plus.tool.issuer}">Value</label>
           <div>
-            <input type="text" class="form-control" id="issuer" th:value="${tenant.issuer}" th:field="*{issuer}" required />
+            <input type="text" class="form-control" id="issuer" th:value="${tenant.issuer}" th:field="*{issuer}" pattern="https?://[^\s\/]+(?:\/[^\/\s]+)*$" th:attr="title=#{plus.tenant.issuer.error.slash}" required aria-describedby="issuer-input-error" />
+            <span id="issuer-input-error" class="sr-only"></span>
           </div>
           <div th:text="#{plus.tool.issuer.detail}">
               This is different for each LMS, but it is usually a URL like "https://plus.sakalms.org" - with no trailing slash.
               Sometimes this will be the domain where the LMS is hosted.  For some cloud-hosted providers, they use one issuer
               across all customers.  This field is required.
-          </div>
-        </div>
-        <div id="allowedtools-group" class="form-group form-control-required">
-          <label for="allowedtools" class="form-control-label" th:text="#{plus.tool.allowedtools}">Value</label>
-          <div>
-            <input type="text" class="form-control" id="allowedtools" th:value="${tenant.allowedTools}" th:field="*{allowedTools}" required  />
-          </div>
-          <div th:text="#{plus.tool.allowedtools.detail}">
-              This field is a colon-separated list of Sakai tool ids like "sakai.resources" there is a special "sakai.site"
-              tool id which controls the availability of the "entire site" launch".  See the documentation for more detail.  A simple default
-              for this is "sakai.site".
           </div>
         </div>
         <div id="trustemail-group" class="form-group form-switch">
@@ -90,15 +80,6 @@
             <input type="text" class="form-control" id="deploymentid" th:value="${tenant.deploymentId}" th:field="*{deploymentId}" />
           </div>
         </div>
-        <div id="newwindowtools-group" class="form-group">
-          <label for="newwindowtools" class="form-control-label" th:text="#{plus.tool.newwindowtools}">Value</label>
-          <div>
-            <input type="text" class="form-control" id="newwindowtools" th:value="${tenant.newWindowTools}" th:field="*{newWindowTools}" />
-          </div>
-          <div th:text="#{plus.tool.newwindowtools.detail}">
-              plus.tool.newwindowtools.detail
-          </div>
-        </div>
         <div id="sitetemplate-group" class="form-group">
           <label for="sitetemplate" class="form-control-label" th:text="#{plus.tool.sitetemplate}">Value</label>
           <div>
@@ -128,7 +109,7 @@
           </div>
         </div>
         <p>
-        (<a href="https://github.com/sakaiproject/sakai/blob/master/basiclti/docs/LTIROLES.md" target="_blank" th:text="#{plus.tool.inboundrolemap.url}">SakaiPlus Tenant Documentation</a>)
+        (<a href="https://github.com/sakaiproject/sakai/blob/master/lti/docs/LTIROLES.md" target="_blank" th:text="#{plus.tool.inboundrolemap.url}">SakaiPlus Tenant Documentation</a>)
         </p>
         <div id="verbose-group" class="form-group form-switch">
           <div>

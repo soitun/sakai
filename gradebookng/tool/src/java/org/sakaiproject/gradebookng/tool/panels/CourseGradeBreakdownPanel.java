@@ -20,8 +20,6 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -41,8 +39,10 @@ import org.sakaiproject.gradebookng.tool.model.GradebookUiSettings;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
 import org.sakaiproject.gradebookng.business.model.GbStudentGradeInfo;
 import org.sakaiproject.gradebookng.business.model.GbGradeInfo;
-import org.sakaiproject.grading.api.*;
-import org.sakaiproject.portal.util.PortalUtils;
+import org.sakaiproject.grading.api.Assignment;
+import org.sakaiproject.grading.api.CategoryDefinition;
+import org.sakaiproject.grading.api.GradingConstants;
+import org.sakaiproject.grading.api.SortType;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CourseGradeBreakdownPanel extends Panel {
     private static final long serialVersionUID = 1L;
 
-    private final GradeType gradeType;
+    private final Integer gradeType;
 
     @SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
     protected GradebookNgBusinessService businessService;
@@ -64,24 +64,13 @@ public class CourseGradeBreakdownPanel extends Panel {
     private Double overAllPoints = 0D;
     private final ModalWindow window;
     private boolean weightedCategories;
-    private List<Long> deletableItemsList = new ArrayList<>();
-    public List<Long> getDeletableItemsList () {
-        return this.deletableItemsList;
-    }
 
     public CourseGradeBreakdownPanel(final String id, final ModalWindow window) {
         super(id);
         this.window = window;
-        this.weightedCategories = this.businessService.getGradebookSettings().getCategoryType().getValue() == GradingService.CATEGORY_TYPE_WEIGHTED_CATEGORY;
+        this.weightedCategories = Objects.equals(this.businessService.getGradebookSettings().getCategoryType(), GradingConstants.CATEGORY_TYPE_WEIGHTED_CATEGORY);
         add(new GbFeedbackPanel("items-feedback"));
-        this.gradeType = GradeType.valueOf(this.businessService.getGradebook().getGradeType().toString());
-    }
-
-    @Override
-    public void renderHead(final IHeaderResponse response) {
-        super.renderHead(response);
-        final String version = PortalUtils.getCDNQuery();
-        response.render(CssHeaderItem.forUrl(String.format("/gradebookng-tool/styles/gradebook-items.css?version=%s", version)));
+        this.gradeType = this.businessService.getGradebook().getGradeType();
     }
 
     @Override
@@ -114,7 +103,7 @@ public class CourseGradeBreakdownPanel extends Panel {
                 if (assignment == null || StringUtils.isBlank(assignment.getExternalAppName())) {
                     externalAppFlag.setVisible(false);
                 } else {
-                    externalAppFlag.add(new AttributeModifier("data-content", gradebookPage.generatePopoverContent(new StringResourceModel("label.gradeitem.externalapplabel", null, new Object[] { assignment.getExternalAppName() }).getString())));
+                    externalAppFlag.add(new AttributeModifier("data-content", gradebookPage.generatePopoverContent(new StringResourceModel("label.gradeitem.externalapplabel").setParameters(assignment.getExternalAppName()).getString())));
                     String iconClass = businessService.getIconClass(assignment);
                     externalAppFlag.add(new AttributeModifier("class", "gb-external-app-flag " + iconClass));
                 }
@@ -131,13 +120,13 @@ public class CourseGradeBreakdownPanel extends Panel {
                 }
                 item.add(gradebookPage.buildFlagWithPopover("extraCreditCategoryFlag", getString("label.gradeitem.extracreditcategory"))
                         .setVisible(categoryDefinition != null && Boolean.TRUE.equals(categoryDefinition.getExtraCredit())));
-                item.add(gradebookPage.buildFlagWithPopover("dropLowestCategoryFlag", getString("label.gradeitem.droplowestcategory").replace("{0}",
+                item.add(gradebookPage.buildFlagWithPopover("dropLowestCategoryFlag", getString("label.category.droplowest").replace("{0}",
                         String.valueOf(categoryDefinition != null ? categoryDefinition.getDropLowest() : "")))
                         .setVisible(categoryDefinition != null && categoryDefinition.getDropLowest() != null && categoryDefinition.getDropLowest() > 0));
-                item.add(gradebookPage.buildFlagWithPopover("dropHighestCategoryFlag", getString("label.gradeitem.drophighestcategory").replace("{0}",
+                item.add(gradebookPage.buildFlagWithPopover("dropHighestCategoryFlag", getString("label.category.drophighest").replace("{0}",
                         String.valueOf(categoryDefinition != null ? categoryDefinition.getDropHighest() : "")))
                         .setVisible(categoryDefinition != null && categoryDefinition.getDropHighest() != null && categoryDefinition.getDropHighest() > 0));
-                item.add(gradebookPage.buildFlagWithPopover("keepHighestCategoryFlag", getString("label.gradeitem.keephighestcategory").replace("{0}",
+                item.add(gradebookPage.buildFlagWithPopover("keepHighestCategoryFlag", getString("label.category.keephighest").replace("{0}",
                         String.valueOf(categoryDefinition != null ? categoryDefinition.getKeepHighest() : "")))
                         .setVisible(categoryDefinition != null && categoryDefinition.getKeepHighest() != null && categoryDefinition.getKeepHighest() > 0));
                 WebMarkupContainer numberGradedCol = new WebMarkupContainer("number-graded");
@@ -155,20 +144,6 @@ public class CourseGradeBreakdownPanel extends Panel {
                 if (assignment != null) {
                     // We know this is an assignment
                     item.add(new Label("out-of-label", assignment.getPoints()));
-                    final List<Double> allGrades = new ArrayList<>();
-                    final List<GbStudentGradeInfo> gradeInfo = businessService.buildGradeMatrix(Collections.singletonList(assignment));
-                    for (final GbStudentGradeInfo studentGradeInfo : gradeInfo) {
-                        final Map<Long, GbGradeInfo> studentGrades = studentGradeInfo.getGrades();
-                        final GbGradeInfo grade = studentGrades.get(gbItem.getItemId());
-                        if (grade != null && grade.getGrade() != null) {
-                            allGrades.add(Double.valueOf(grade.getGrade()));
-                        }
-                    }
-                    if (!allGrades.isEmpty()) {
-                        item.add(new Label("average-label", constructAverageLabel(allGrades, assignment)));
-                    } else {
-                        item.add(new Label("average-label", "-"));
-                    }
                 } else {
                     // This item is a category
                     String categoryPointsOrWeight;
@@ -184,11 +159,6 @@ public class CourseGradeBreakdownPanel extends Panel {
                         }
                     }
                     item.add(new Label("out-of-label", categoryPointsOrWeight));
-                    if (!categoryDefinition.getName().equals("Uncategorized")) {
-                        item.add(new Label("average-label", constructCategoryAverageLabel(categoryDefinition)));
-                    } else {
-                        item.add(new Label("average-label", ""));
-                    }
                     item.add(new AttributeAppender("class", "categoryRow"));
                 }
             }
@@ -202,7 +172,7 @@ public class CourseGradeBreakdownPanel extends Panel {
         };
         itemListContainer.add(totalPtsContainer);
         totalPtsContainer.add(new Label("total-points", CourseGradeBreakdownPanel.this.overAllPoints));
-        add(new GbAjaxLink("done") {
+        add(new GbAjaxLink<>("done") {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -292,21 +262,5 @@ public class CourseGradeBreakdownPanel extends Panel {
             }
         }
         return itemList;
-    }
-    private String constructAverageLabel(final List<Double> allGrades, final Assignment assignment) {
-        final double average = businessService.calculateAverage(allGrades);
-        final Double total = assignment.getPoints();
-        return FormatHelper.formatDoubleAsPercentage(100 * (average / total));
-    }
-
-    private String constructCategoryAverageLabel(final CategoryDefinition category) {
-        final List<Double> allAssignmentGrades = businessService.getCategoryAssignmentTotals(category, null);
-        if(allAssignmentGrades.size() > 0){
-            final double average = businessService.calculateAverage(allAssignmentGrades);
-            return FormatHelper.formatDoubleAsPercentage(100 * (average / 100));
-        } else {
-            return "-";
-        }
-
     }
 }

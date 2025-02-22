@@ -15,8 +15,10 @@
  */
 package org.sakaiproject.test;
 
+import org.mockito.Mockito;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.entity.api.EntityManager;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.user.api.User;
@@ -38,11 +40,11 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 
 @Slf4j
-public class SakaiTests extends AbstractTransactionalJUnit4SpringContextTests {
+public abstract class SakaiTests extends AbstractTransactionalJUnit4SpringContextTests {
 
-    @Autowired private AuthzGroupService authzGroupService;
-    @Autowired private UserDirectoryService userDirectoryService;
-    @Autowired private SiteService siteService;
+    @Autowired protected AuthzGroupService authzGroupService;
+    @Autowired protected UserDirectoryService userDirectoryService;
+    @Autowired protected SiteService siteService;
 
     public String instructor = "instructor";
     public User instructorUser = null;
@@ -67,6 +69,7 @@ public class SakaiTests extends AbstractTransactionalJUnit4SpringContextTests {
 
     @Before
     public void setup() {
+        Mockito.reset(siteService);
 
         instructorUser = mock(User.class);
         when(instructorUser.getId()).thenReturn(instructor);
@@ -90,6 +93,7 @@ public class SakaiTests extends AbstractTransactionalJUnit4SpringContextTests {
 
         try {
           when(siteService.getSite(site1Id)).thenReturn(site1);
+          when(siteService.getSiteVisit(site1Id)).thenReturn(site1);
         } catch (Exception e) {
         }
 

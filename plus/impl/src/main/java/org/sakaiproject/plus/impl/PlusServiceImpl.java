@@ -28,6 +28,14 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Optional;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import java.io.InputStream;
 
@@ -87,15 +95,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.tsugi.http.HttpUtil;
 import org.tsugi.http.HttpClientUtil;
 
-import org.tsugi.basiclti.BasicLTIConstants;
-import org.tsugi.basiclti.BasicLTIUtil;
-import org.sakaiproject.basiclti.util.SakaiBLTIUtil;
+import org.tsugi.lti.LTIConstants;
+import org.tsugi.lti.LTIUtil;
+import org.sakaiproject.lti.util.SakaiLTIUtil;
 
 import org.sakaiproject.lti.api.UserFinderOrCreator;
 import org.sakaiproject.lti.api.SiteEmailPreferenceSetter;
 import org.sakaiproject.lti.api.SiteMembershipUpdater;
 
-import org.sakaiproject.basiclti.util.SakaiKeySetUtil;
+import org.sakaiproject.lti.util.SakaiKeySetUtil;
 import org.tsugi.jackson.JacksonUtil;
 import org.sakaiproject.lti13.util.SakaiLaunchJWT;
 
@@ -142,6 +150,44 @@ public class PlusServiceImpl implements PlusService {
 	@Autowired private SiteService siteService;
 	@Autowired private SecurityService securityService;
 
+	/**
+	 * Context Synchronization Scheduler - this approach was inspired by
+	 * kernel-impl/src/main/java/org/sakaiproject/authz/impl/DbAuthzGroupService.java
+	 */
+	private ScheduledExecutorService refreshScheduler;
+	private Map<String, String> refreshQueue;
+
+	/**
+	 * Final initialization, once all dependencies are set.
+	 */
+	public void init()
+	{
+		try {
+			refreshQueue = Collections.synchronizedMap(new LinkedHashMap<>());
+
+			long refreshTaskInterval = 60;
+
+			refreshScheduler = Executors.newSingleThreadScheduledExecutor();
+			refreshScheduler.scheduleWithFixedDelay(
+				new refreshContextMembershipsTask(),
+				120, // minimally wait 2 mins for sakai to start
+				refreshTaskInterval, // delay before running again
+				TimeUnit.SECONDS
+			);
+		} catch (Exception t) {
+			log.warn("init(): ", t);
+		}
+	}
+
+	/**
+	 * Returns to uninitialized state.
+	 */
+	public void destroy()
+	{
+		refreshScheduler.shutdown();
+		log.info(this +".destroy()");
+	}
+
 	/*
 	 * Indicate if plus is enabled on this system
 	 */
@@ -166,12 +212,12 @@ public class PlusServiceImpl implements PlusService {
 	 */
 	@Override
 	public String getPlusServletPath() {
-		return SakaiBLTIUtil.getOurServerUrl() + "/plus/sakai";
+		return SakaiLTIUtil.getOurServerUrl() + "/plus/sakai";
 	}
 
 	@Override
 	public String getOidcKeySet() {
-		return SakaiBLTIUtil.getOurServerUrl() + "/imsblis/lti13/keyset";
+		return SakaiLTIUtil.getOurServerUrl() + "/imsblis/lti13/keyset";
 	}
 
 	@Override
@@ -398,42 +444,42 @@ public class PlusServiceImpl implements PlusService {
 		payload.put("deployment_id", launchJWT.deployment_id);
 		payload.put("oidc_token", tenant.getOidcToken());
 		payload.put("oidc_audience", tenant.getOidcAudience());
-		payload.put(BasicLTIConstants.LTI_MESSAGE_TYPE, launchJWT.message_type);
+		payload.put(LTIConstants.LTI_MESSAGE_TYPE, launchJWT.message_type);
 
 		if ( launchJWT.context != null ) {
-			if ( launchJWT.context.title != null ) payload.put(BasicLTIConstants.CONTEXT_TITLE, launchJWT.context.title);
-			if ( launchJWT.context.label != null ) payload.put(BasicLTIConstants.CONTEXT_LABEL, launchJWT.context.label);
+			if ( launchJWT.context.title != null ) payload.put(LTIConstants.CONTEXT_TITLE, launchJWT.context.title);
+			if ( launchJWT.context.label != null ) payload.put(LTIConstants.CONTEXT_LABEL, launchJWT.context.label);
 		}
 
 		// https://www.imsglobal.org/spec/lti/v1p3/#resource-link-claim
 		String linkId = launchJWT.resource_link != null ? launchJWT.resource_link.id : null;
 		if ( linkId != null ) {
-			payload.put(BasicLTIConstants.RESOURCE_LINK_ID, linkId);
-			if ( launchJWT.resource_link.title != null ) payload.put(BasicLTIConstants.RESOURCE_LINK_TITLE, launchJWT.resource_link.title);
-			if ( launchJWT.resource_link.description != null ) payload.put(BasicLTIConstants.RESOURCE_LINK_DESCRIPTION, launchJWT.resource_link.description);
+			payload.put(LTIConstants.RESOURCE_LINK_ID, linkId);
+			if ( launchJWT.resource_link.title != null ) payload.put(LTIConstants.RESOURCE_LINK_TITLE, launchJWT.resource_link.title);
+			if ( launchJWT.resource_link.description != null ) payload.put(LTIConstants.RESOURCE_LINK_DESCRIPTION, launchJWT.resource_link.description);
 		}
 
 		// User data
-		payload.put(BasicLTIConstants.USER_ID, launchJWT.subject);
-		payload.put(BasicLTIConstants.LAUNCH_PRESENTATION_LOCALE, launchJWT.locale);
-		payload.put(BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY, launchJWT.email);
-		payload.put(BasicLTIConstants.LIS_PERSON_NAME_GIVEN, launchJWT.given_name);
-		payload.put(BasicLTIConstants.LIS_PERSON_NAME_FAMILY, launchJWT.family_name);
-		// payload.put(BasicLTIConstants.LIS_PERSON_NAME_MIDDLE, launchJWT.middle_name);
+		payload.put(LTIConstants.USER_ID, launchJWT.subject);
+		payload.put(LTIConstants.LAUNCH_PRESENTATION_LOCALE, launchJWT.locale);
+		payload.put(LTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY, launchJWT.email);
+		payload.put(LTIConstants.LIS_PERSON_NAME_GIVEN, launchJWT.given_name);
+		payload.put(LTIConstants.LIS_PERSON_NAME_FAMILY, launchJWT.family_name);
+		// payload.put(LTIConstants.LIS_PERSON_NAME_MIDDLE, launchJWT.middle_name);
 
 		String ltiRoles = launchJWT.getLTI11Roles();
-		if ( StringUtils.isNotBlank(ltiRoles) ) payload.put(BasicLTIConstants.ROLES, ltiRoles);
+		if ( StringUtils.isNotBlank(ltiRoles) ) payload.put(LTIConstants.ROLES, ltiRoles);
 
 		// TODO: Ask for this in custom...
-		// payload.put(BasicLTIConstants.USER_IMAGE, );
+		// payload.put(LTIConstants.USER_IMAGE, );
 		// payload.put("ext_email_delivery_preference", );
 
-		// Because basiclti-common can't (yet) be in shared
+		// Because lti-common can't (yet) be in shared
 		if ( launchJWT instanceof SakaiLaunchJWT ) {
 			SakaiLaunchJWT sakaiLaunchJWT = (SakaiLaunchJWT) launchJWT;
 			if ( sakaiLaunchJWT.sakai_extension != null ) {
 				if ( isNotEmpty(sakaiLaunchJWT.sakai_extension.sakai_eid) ) {
-					payload.put(BasicLTIConstants.EXT_SAKAI_PROVIDER_EID, sakaiLaunchJWT.sakai_extension.sakai_eid);
+					payload.put(LTIConstants.EXT_SAKAI_PROVIDER_EID, sakaiLaunchJWT.sakai_extension.sakai_eid);
 				}
 				payload.put("ext_sakai_server", sakaiLaunchJWT.sakai_extension.sakai_server);
 				payload.put("ext_sakai_serverid", sakaiLaunchJWT.sakai_extension.sakai_serverid);
@@ -521,11 +567,93 @@ public class PlusServiceImpl implements PlusService {
 		linkRepository.save(link);
 	}
 
+	/**
+	 * Step through queue and Context Memberships queued up for a refresh
+	 *
+	 * See also: kernel-impl/src/main/java/org/sakaiproject/authz/impl/DbAuthzGroupService.java
+	 */
+	protected class refreshContextMembershipsTask implements Runnable {
+		@Override
+		public void run() {
+			if ( refreshQueue.size() < 1 ) return;
+			log.debug("RefreshContextMembershipsTask size={}", refreshQueue.size());
+
+			long numberRefreshed = 0;
+			long timeRefreshed = 0;
+			long longestRefreshed = 0;
+			String longestName = null;
+
+			while(true) {
+				List<String> queueList = new ArrayList<String>(refreshQueue.values());
+				if ( queueList.size() < 1 ) break;
+				String contextGuid = queueList.get(0);
+				log.debug("Context pulled from queue {}", contextGuid);
+
+				numberRefreshed++;
+				long time = 0;
+				long start = System.currentTimeMillis();
+
+				try {
+					syncSiteMembershipsInternal(contextGuid);
+				} catch ( LTIException e ) {
+					log.error("refreshContextMembershipsTask.run() Problem refreshing context: " + contextGuid, e);
+				} finally {
+					time = (System.currentTimeMillis() - start);
+					refreshQueue.remove(contextGuid);
+					log.debug("Refresh of context: {} took {} seconds", contextGuid, time/1e3);
+				}
+
+				timeRefreshed += time;
+				if (time > longestRefreshed) {
+					longestRefreshed = time;
+					longestName = contextGuid;
+				}
+
+			}
+			log.info("Refreshed {} contexts in {} seconds, longest context was {} at {} seconds",
+				numberRefreshed, timeRefreshed/1e3, longestName, longestRefreshed/1e3);
+		}
+	}
+
+	/*
+	 * Schedule SyncSiteMemberships if enough time has passed since the last request
+	 */
+	public void requestSyncSiteMembershipsCheck(Context context, boolean isInstructor) {
+		if ( context == null ) return;
+
+		// First run is scheduled immediately
+		Instant lastRun = context.getNrpsStart();
+		if ( lastRun == null ) {
+			requestSyncSiteMemberships(context);
+			return;
+		}
+
+		// Otherwise we compute the delay
+		long delay = getNRPSDelaySeconds(context, isInstructor);
+		long lastRunEpoch = lastRun.getEpochSecond();
+		long nowEpoch = Instant.now().getEpochSecond();
+		long delta = nowEpoch - lastRunEpoch;
+
+		if ( delta < 0 || delta > delay ) {
+			requestSyncSiteMemberships(context);
+		} else {
+			log.info("Waiting {} seconds between NRPS calls context={} delta={}", delay, context.getId(), delta);
+		}
+	}
+
+	/*
+	 * Schedule SyncSiteMemberships
+	 */
+	@Override
+	public void requestSyncSiteMemberships(Context context) {
+		if ( context == null ) return;
+		refreshQueue.put(context.getId(), context.getId());
+	}
+
 	/*
 	 * Retrieve Context Memberships from calling LMS and update the site in Sakai
 	 */
-	@Override
-	public void syncSiteMemberships(String contextGuid, Site site) throws LTIException {
+	public void syncSiteMembershipsInternal(String contextGuid) throws LTIException {
 
 		log.debug("synchSiteMemberships");
 
@@ -535,7 +663,7 @@ public class PlusServiceImpl implements PlusService {
 		}
 
 		if (isEmpty(contextGuid) ) {
-			log.error("Context GUID is required. Memberships will NOT be synchronized.");
+			log.error("Context GUID is required. Memberships will NOT be synchronized");
 			return;
 		}
 
@@ -563,6 +691,23 @@ public class PlusServiceImpl implements PlusService {
 			return;
 		}
 
+		String siteId = context.getSakaiSiteId();
+		if (isEmpty(siteId) ) {
+			log.error("Context {} is not associated with a site. Memberships will NOT be synchronized.", contextGuid);
+			return;
+		}
+
+		Site site = null;
+		try
+		{
+			site = siteService.getSite(siteId);
+		}
+		catch (IdUnusedException e)
+		{
+			log.error("Context {} could not load siteid={}. Memberships will NOT be synchronized.", contextGuid, siteId);
+			return;
+		}
+
 		// Load the Tenant
 		Optional<Tenant> optTenant = tenantRepository.findById(tenantGuid);
 		Tenant tenant = null;
@@ -571,7 +716,7 @@ public class PlusServiceImpl implements PlusService {
 		}
 
 		if ( tenant == null ) {
-			log.info("Tenant notfound {}", tenantGuid);
+			log.info("Context {} Tenant notfound {}", contextGuid, tenantGuid);
 			return;
 		}
 
@@ -659,7 +804,10 @@ public class PlusServiceImpl implements PlusService {
 
 				HttpHeaders responseHeaders = response.headers();
 				List<String> allValuesOfLink = responseHeaders.allValues("Link");
+				log.debug("allValuesOfLink length={} content={}", allValuesOfLink.size(),allValuesOfLink);
 				String nextLink = HttpUtil.extractLinkByRel(allValuesOfLink, "next");
+				log.debug("nextLink={}", nextLink);
+
 				// If this is not null, we will loop back up and continue to page in results for multi-request NRPS
 				contextMemberships = null;
 				if ( isNotEmpty(nextLink) ) {
@@ -737,7 +885,7 @@ public class PlusServiceImpl implements PlusService {
 					Membership membership = new Membership();
 					membership.setSubject(subject);
 					membership.setContext(context);
-	                membership.setUpdatedAt(Instant.now());
+					membership.setUpdatedAt(Instant.now());
 					String ltiRoles = launchJWT.getLTI11Roles();
 					if ( StringUtils.isNotBlank(ltiRoles) ) membership.setLtiRoles(ltiRoles);
 					membership = membershipRepository.upsert(membership);
@@ -911,9 +1059,9 @@ public class PlusServiceImpl implements PlusService {
 		// Move into the destination time zone
 		String timeZone = tenant.getTimeZone();
 		if ( dueDate != null && StringUtils.isNotBlank(timeZone) ) {
-			dueDate = BasicLTIUtil.shiftJVMDateToTimeZone(dueDate, timeZone);
+			dueDate = LTIUtil.shiftJVMDateToTimeZone(dueDate, timeZone);
 		}
-		if ( dueDate != null ) li.endDateTime = BasicLTIUtil.getISO8601(dueDate);
+		if ( dueDate != null ) li.endDateTime = LTIUtil.getISO8601(dueDate);
 		String body = li.prettyPrintLog();
 
 		// Track this in our local database including success / failure of the LMS interaction
@@ -1123,9 +1271,9 @@ public class PlusServiceImpl implements PlusService {
 		// Move into the destination time zone
 		String timeZone = tenant.getTimeZone();
 		if ( dueDate != null && StringUtils.isNotBlank(timeZone) ) {
-			dueDate = BasicLTIUtil.shiftJVMDateToTimeZone(dueDate, timeZone);
+			dueDate = LTIUtil.shiftJVMDateToTimeZone(dueDate, timeZone);
 		}
-		if ( dueDate != null ) li.endDateTime = BasicLTIUtil.getISO8601(dueDate);
+		if ( dueDate != null ) li.endDateTime = LTIUtil.getISO8601(dueDate);
 		String body = li.prettyPrintLog();
 
 		// In Update
@@ -1279,7 +1427,7 @@ public class PlusServiceImpl implements PlusService {
 	public void processGradeEvent(Event event)
 	{
 		// /gradebookng/7/12/55a0c76a-69e2-4ca7-816b-3c2e8fe38ce0/42/OK/instructor[m, 2]
-		log.debug("processGradeEvent sees event {}", event.getResource());
+		log.debug("processGradeEvent event={} resource={}", event.getEvent(), event.getResource());
 		String eventResource = event.getResource();
 		if ( eventResource == null ) return;
 		String[] parts = eventResource.split("/");
@@ -1296,7 +1444,7 @@ public class PlusServiceImpl implements PlusService {
 		// /gradebookng/7/12/55a0c76a-69e2-4ca7-816b-3c2e8fe38ce0/42/OK/instructor[m, 2]
 		//	   1	  2 3   4									5
 		if ( "gradebookng".equals(source) ) {
-			log.debug("processGradeEvent UI {}", event.getResource());
+			log.debug("processGradeEvent UI event={} resource={}", event.getEvent(), event.getResource());
 			itemId = parts[3];
 			studentId = parts[4];
 			scoreStr = parts[5];
@@ -1305,7 +1453,7 @@ public class PlusServiceImpl implements PlusService {
 		// /gradebook/a77ed1b6-ceea-4339-ad60-8bbe7219f3b5/Trophy/55a0c76a-69e2-4ca7-816b-3c2e8fe38ce0/99.0/student[m, 2]
 		//	   1	  2									 3   4									5
 		} else if ( "gradebook".equals(source) ) {
-			log.debug("processGradeEvent WS {}", event.getResource());
+			log.debug("processGradeEvent WS event={} resource = {}", event.getEvent(), event.getResource());
 			siteId = parts[2];
 			itemId = parts[3];
 			studentId = parts[4];
@@ -1383,7 +1531,7 @@ public class PlusServiceImpl implements PlusService {
 		score.scoreMaximum = gradebookAssignment.getPoints();
 		score.comment = comment;
 		score.userId = subject.getSubject();
-		score.timestamp = BasicLTIUtil.getISO8601();
+		score.timestamp = LTIUtil.getISO8601();
 
 		// TODO: Think more about this - Canvas requires this but we don't know what various values mean in Canvas
 		// TODO: Review the Blackboard state diagram
@@ -1590,6 +1738,11 @@ public class PlusServiceImpl implements PlusService {
 
 	/*
 	 * Get the number of seconds to use re-retrieving a roster via NRPS
+	 *
+	 * Initially this is just based on whether the user is an instructor or student
+	 * but in the future, we can consider things like time since the context
+	 * was created, time since the last syncronization was done, or the number
+	 * of members in the context.
 	 */
 	public long getNRPSDelaySeconds(Context context, boolean instructor)
 	{

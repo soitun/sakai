@@ -327,7 +327,7 @@ public abstract class DbSiteService extends BaseSiteService
 				fields = new Object[6];
 				fields[0] = page.getId();
 				fields[1] = caseId(edit.getId());
-				fields[2] = page.getTitle();
+				fields[2] = StringUtils.abbreviate(StringUtils.trimToEmpty(page.getTitle()), SiteServiceSqlDefault.TITLE_MAX_LENGTH);
 				fields[3] = Integer.toString(page.getLayout());
 				fields[4] = ((((BaseSitePage) page).m_popup) ? "1" : "0");
 				fields[5] = Integer.valueOf(pageOrder++);
@@ -352,7 +352,7 @@ public abstract class DbSiteService extends BaseSiteService
 					fields[2] = caseId(edit.getId());
 					fields[3] = tool.getToolId();
 					fields[4] = Integer.valueOf(toolOrder++);
-					fields[5] = tool.getTitle();
+					fields[5] = StringUtils.abbreviate(StringUtils.trimToEmpty(tool.getTitle()), SiteServiceSqlDefault.TITLE_MAX_LENGTH);
 					fields[6] = tool.getLayoutHints();
 					m_sql.dbWrite(statement, fields);
 
@@ -365,9 +365,9 @@ public abstract class DbSiteService extends BaseSiteService
 			// add each group
 			for (Iterator<Group> iGroups = edit.getGroups().iterator(); iGroups.hasNext();)
 			{
-				Group group = (Group) iGroups.next();
+				Group group = iGroups.next();
 				//does the group have a title?
-				if (group.getTitle() == null || group.getTitle().trim().length() == 0)
+				if (group.getTitle() == null || group.getTitle().trim().isEmpty())
 				{
 					throw new IllegalArgumentException("Group title can't be empty");
 				}
@@ -378,7 +378,7 @@ public abstract class DbSiteService extends BaseSiteService
 				fields = new Object[4];
 				fields[0] = group.getId();
 				fields[1] = caseId(edit.getId());
-				fields[2] = group.getTitle();
+				fields[2] = StringUtils.abbreviate(StringUtils.trimToEmpty(group.getTitle()), SiteServiceSqlDefault.TITLE_MAX_LENGTH);
 				fields[3] = group.getDescription();
 				m_sql.dbWrite(statement, fields);
 
@@ -506,7 +506,7 @@ public abstract class DbSiteService extends BaseSiteService
 			fields[2] = caseId(tool.getSiteId());
 			fields[3] = tool.getToolId();
 			fields[4] = Integer.valueOf(tool.getPageOrder());
-			fields[5] = tool.getTitle();
+			fields[5] = StringUtils.abbreviate(StringUtils.trimToEmpty(tool.getTitle()), SiteServiceSqlDefault.TITLE_MAX_LENGTH);
 			fields[6] = tool.getLayoutHints();
 			m_sql.dbWrite(statement, fields);
 
@@ -814,7 +814,7 @@ public abstract class DbSiteService extends BaseSiteService
 					fieldCount += ((Set) ofType).size();
 				}
 			}
-			if (criteria != null) fieldCount += 1;
+			if (criteria != null) fieldCount += 2;
 			if ((type == SelectionType.JOINABLE) || (type == SelectionType.ACCESS) || (type == SelectionType.UPDATE) || (type == SelectionType.MEMBER) || (type == SelectionType.DELETED) || (type == SelectionType.INACTIVE_ONLY)) fieldCount++;
 			if (propertyCriteria != null) fieldCount += (2 * propertyCriteria.size());
 			if (propertyRestrictions != null) fieldCount += (2 * propertyRestrictions.size());
@@ -862,7 +862,8 @@ public abstract class DbSiteService extends BaseSiteService
 				}
 				if (criteria != null)
 				{
-					fields[pos++] =  "%" + criteria + "%";
+					fields[pos++] = "%" + criteria + "%"; // TITLE
+					fields[pos++] = "%" + criteria + "%"; // SITE_ID
 				}
 
 				if (type == SelectionType.JOINABLE)
@@ -1480,7 +1481,7 @@ public abstract class DbSiteService extends BaseSiteService
 					fieldCount += ((Set) ofType).size();
 				}
 			}
-			if (criteria != null) fieldCount += 1;
+			if (criteria != null) fieldCount += 2;
 			if ((type == SelectionType.JOINABLE) || (type == SelectionType.ACCESS) || (type == SelectionType.UPDATE) || (type == SelectionType.MEMBER) || (type == SelectionType.DELETED) || (type == SelectionType.INACTIVE_ONLY)) fieldCount++;
 			if (propertyCriteria != null) fieldCount += (2 * propertyCriteria.size());
 			Object fields[] = null;
@@ -1527,7 +1528,8 @@ public abstract class DbSiteService extends BaseSiteService
 				if (criteria != null)
 				{
 					criteria = "%" + criteria + "%";
-					fields[pos++] = criteria;
+					fields[pos++] = criteria; // TITLE
+					fields[pos++] = criteria; // SITE_ID
 				}
 				if ((propertyCriteria != null) && (propertyCriteria.size() > 0))
 				{
@@ -2695,13 +2697,13 @@ public abstract class DbSiteService extends BaseSiteService
 				boolean isUser = "1".equals(result.getString(14)) ? true : false;
 				String createdBy = result.getString(15);
 				String modifiedBy = result.getString(16);
-				java.sql.Timestamp ts = result.getTimestamp(17, sqlService().getCal());
+				java.sql.Timestamp ts = result.getTimestamp(17);
 				Instant createdOn = null;
 				if (ts != null)
 				{
 					createdOn = ts.toInstant();
 				}
-				ts = result.getTimestamp(18, sqlService().getCal());
+				ts = result.getTimestamp(18);
 				Instant modifiedOn = null;
 				if (ts != null)
 				{

@@ -60,21 +60,21 @@
             });
 
             var viewAllText = <h:outputText value="'#{authorFrontDoorMessages.assessment_view_all}'" />;
-            var searchText = <h:outputText value="'#{authorFrontDoorMessages.datatables_sSearch}'" />;
+            var searchText = <h:outputText value="'#{dataTablesMessages.search}'" />;
             var lengthMenuText = <h:outputText value="'#{authorFrontDoorMessages.datatables_lengthMenu}'" />;
             var zeroRecordsText = <h:outputText value="'#{authorFrontDoorMessages.datatables_zeroRecords}'" />;
-            var infoText = <h:outputText value="'#{authorFrontDoorMessages.datatables_info}'" />;
+            var infoText = <h:outputText value="'#{dataTablesMessages.info}'" />;
             var infoEmptyText = <h:outputText value="'#{authorFrontDoorMessages.datatables_infoEmpty}'" />;
             var infoFilteredText = <h:outputText value="'#{authorFrontDoorMessages.datatables_infoFiltered}'" />;
             var emptyTableText = <h:outputText value="'#{authorFrontDoorMessages.datatables_infoEmpty}'" />;
-            var nextText = <h:outputText value="'#{authorFrontDoorMessages.datatables_paginate_next}'" />;
-            var previousText = <h:outputText value="'#{authorFrontDoorMessages.datatables_paginate_previous}'" />;
-            var sortAscendingText = <h:outputText value="'#{authorFrontDoorMessages.datatables_aria_sortAscending}'" />;
-            var sortDescendingText = <h:outputText value="'#{authorFrontDoorMessages.datatables_aria_sortDescending}'" />;
+            var nextText = <h:outputText value="'#{dataTablesMessages.paginate_next}'" />;
+            var previousText = <h:outputText value="'#{dataTablesMessages.paginate_previous}'" />;
+            var sortAscendingText = <h:outputText value="'#{dataTablesMessages.aria_sortAscending}'" />;
+            var sortDescendingText = <h:outputText value="'#{dataTablesMessages.aria_sortDescending}'" />;
 
             var notEmptySelectTableTd = $("#selectIndexForm\\:selectTable td:not(:empty)").length;
             if (notEmptySelectTableTd > 0) {
-              $.fn.dataTable.ext.classes.sLengthSelect = 'form-control';
+              $.fn.dataTable.ext.classes.sLengthSelect = 'input-form-control';
               var table = $("#selectIndexForm\\:selectTable").DataTable({
                     "paging": true,
                     "lengthMenu": [[5, 10, 20, 50, 100, 200, -1], [5, 10, 20, 50, 100, 200, viewAllText]],
@@ -261,7 +261,7 @@
                         <h:outputText value="#{takeable.dueDate}" rendered="#{!takeable.pastDue}">
                             <f:convertDateTime dateStyle="medium" timeStyle="short" timeZone="#{author.userTimeZone}" />
                         </h:outputText>
-                        <h:outputText value="#{takeable.dueDate}" styleClass="hidden spanValue">
+                        <h:outputText value="#{takeable.dueDate}" styleClass="d-none spanValue">
                             <f:convertDateTime pattern="yyyyMMddHHmmss" />
                         </h:outputText>
                     </t:column>

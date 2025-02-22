@@ -6,9 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">        
         <link href="${pageSkinRepo}/${pageSkin}/tool.css" type="text/css" rel="stylesheet" media="all" />
         <script src="/library/js/modernizr.js$!{portalCDNQuery}"></script>
-    #if (${sakaiThemesEnabled})
-        <script src="$!{portalCDNPath}/portal/scripts/themeswitcher.js$!{portalCDNQuery}"></script>
-    #end
+        <script src="/library/js/headscripts.js$!{portalCDNQuery}"></script>
+ 
     </head>
     <body class="portalBody Mrphs-portalBody">
         <div id="sakai-login-dialog" class="modal position-static d-block">
@@ -20,7 +19,7 @@
                         <button type="button" class="d-none btn-close" data-bs-dismiss="modal" aria-label="___i18n___Close"></button>
                     </div>
                     <aside id="xlogin-logo" class="bg-primary mb-3 py-2 px-2 text-center">
-                        <img src="/library/skin/default-skin/images/sakaiLogo.png" alt="${uiService}" class="portal-header-logo">
+                        <img src="/library/skin/$!{pageSkin}/images/sakaiLogo.png" alt="${uiService}" class="portal-header-logo">
                     </aside>
                     <div class="modal-body">
 
@@ -38,13 +37,13 @@
                                 <input id="pw" name="pw" value="${password}" type="password" class="form-control $!{hasErrorsClass}" autocomplete="current-password"></input>
 
                                 <input type="checkbox" class="btn-check" id="showPw" autocomplete="off">
-                                <label class="btn btn-input-group" for="showPw">
+                                <label class="input-group-text" for="showPw">
                                     <i class="bi bi-eye-slash-fill" aria-hidden="true"></i>
                                     <span class="visually-hidden">${rloader.login_show_pw}</span>
                                 </label>
                             </div>
                             <div class="d-flex gap-2 mb-2">
-                                <input name="submit" type="submit" id="submit" class="order-2 btn btn-primary btn-lg flex-grow-1" value="${loginWording}"/>
+                                <input name="submit" type="submit" id="submit" class="btn btn-primary btn-lg flex-grow-1" value="${loginWording}"/>
                                 #if (${doCancel})
                                     <input name="cancel" type="submit" class="order-1 btn btn-secondary btn-lg" value="${cancelWording}"/>
                                 #end
@@ -53,7 +52,7 @@
 
                         #if (${passwordResetUrl})
                             <div class="text-end px-3 py-2">
-                                <a href="${passwordResetUrl}" class="text-end link-dark right">${passwordResetWording}</a>
+                                <a href="${passwordResetUrl}" class="text-end right">${passwordResetWording}</a>
                             </div>
                         #end
                     </div>
@@ -89,7 +88,7 @@
 
         #set ( $d = "$")
         <script>
-            var portal       = 'body';
+            var portal = {};
             var needJQuery   = true;
             var secondJQuery = false;
             if ( window.jQuery ) {

@@ -16,6 +16,7 @@ package org.sakaiproject.rubrics.api.beans;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.sakaiproject.rubrics.api.model.Rubric;
@@ -43,12 +44,17 @@ public class RubricTransferBean {
     private String siteTitle;
     private String title;
     private Boolean weighted;
+    private Boolean adhoc;
 
     public RubricTransferBean(Rubric rubric) {
+        Objects.requireNonNull(rubric, "rubric must not be null in constructor");
         id = rubric.getId();
         created = rubric.getCreated();
         creatorId = rubric.getCreatorId();
-        criteria = rubric.getCriteria().stream().map(CriterionTransferBean::new).collect(Collectors.toList());
+        criteria = rubric.getCriteria().stream()
+                .filter(Objects::nonNull)
+                .map(CriterionTransferBean::new)
+                .collect(Collectors.toList());
         draft = rubric.getDraft();
         locked = rubric.getLocked();
         maxPoints = rubric.getMaxPoints();
@@ -57,5 +63,6 @@ public class RubricTransferBean {
         shared = rubric.getShared();
         title = rubric.getTitle();
         weighted = rubric.getWeighted();
+        adhoc = rubric.getAdhoc();
     }
 }

@@ -87,7 +87,6 @@
   #templateSettings {
     padding: .5em;
     background: var(--sakai-background-color-2);
-    width: 100%;
     @include border-radius( 5px );
   }
   #siteTypeList {
@@ -162,14 +161,10 @@
         }
       }
       .templateName {
-        float: left;
-        width: 25%;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .templateDescription {
-        float: right;
-        width: 68%;
         overflow: hidden;
         text-overflow: ellipsis;
         p:first-child {
@@ -499,7 +494,7 @@
   }
   #toolHolderWW {
     @include display-flex;
-    .mathJaxToggleArea, .lessonsSubNavToggleArea, .portalNeochatToggleArea {
+    .mathJaxToggleArea, .subPageNavToggleArea {
       @include display-flex;
       @include flex-direction(row-reverse);
       @include justify-content(flex-end);		// align to the left
@@ -563,6 +558,10 @@
     &.nopad {
       padding: 0.5em 0;
     }
+  }
+
+  div.no-margin-top {
+    margin-top: 0;
   }
 
   .siteinfo-tableHeading
@@ -649,6 +648,7 @@
     padding-top: $standard-spacing;
   }
 
+
   div.worksiteSetupContent div.sakai-table-viewFilter input[type=submit],
   div.worksiteSetupContent div.sakai-table-viewFilter button,
   div.worksiteSetupContent div.sakai-table-searchFilter input[type=submit]:last-of-type,
@@ -662,6 +662,13 @@
     }
   }
 
+  @media #{$smallPhone} {
+    div.sakai-table-viewFilter, div.sakai-table-searchFilter {
+      @include flex-direction(row);	// override tables default
+      @include align-items(center);	// override tables default
+    }
+  }
+
   .worksiteSetupViewAndTermFilterForm ~ .sakai-table-searchFilter {
     border-top: 1px solid var(--sakai-border-color);
     padding-top: $standard-spacing;
@@ -672,16 +679,7 @@
     cursor: pointer;
   }
 
-  a.siteimport-options-link {
-    display: none;
-    margin-left: 5px;
-    font-weight: bold;
-  }
-
   div.siteimport-options {
-    display: none;
-    margin-top: 8px;
-    padding-left: 15px;
     font-size: smaller;
   }
 
@@ -706,11 +704,6 @@
 #dropdownMenuButton {
   margin: 2px 0px 2px 4px;
   line-height: 18px;
-}
-
-.form-control-label {
-  font-weight: bold;
-  color: var(--sakai-text-color-2);
 }
 
 td.disabled{
@@ -753,4 +746,8 @@ td.disabled{
       text-align: center;
     }
   }
+}
+
+#printme.btn i {
+  color: white;
 }

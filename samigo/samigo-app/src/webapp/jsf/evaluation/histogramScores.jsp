@@ -43,7 +43,7 @@ $Id$
 <script>
   $(document).ready(function(){
     // The current class is assigned using Javascript because we don't use facelets and the include directive does not support parameters.
-    var currentLink = $('#histogram\\:histogramScoresMenuLink');
+    let currentLink = $('#histogram\\:histogramScoresMenuLink');
     currentLink.addClass('current');
     // Remove the link of the current option
     currentLink.html(currentLink.find('a').text());
@@ -74,33 +74,51 @@ $Id$
 
         <h:messages styleClass="sak-banner-error" rendered="#{! empty facesContext.maximumSeverity}" layout="table" />
 
-        <div class="tier1">
-
+        <h:panelGroup styleClass="b5 d-flex justify-content-between my-2" layout="block">
           <!-- LAST/ALL SUBMISSIONS; PAGER; ALPHA INDEX  -->
-          <h:panelGroup rendered="#{histogramScores.hasNav==null || histogramScores.hasNav=='true'}">
-            <h:outputText value="#{evaluationMessages.view} " />
+          <h:panelGroup styleClass="" rendered="#{histogramScores.hasNav==null || histogramScores.hasNav=='true'}">
+            <label>
+              <h:outputText value="#{evaluationMessages.view} " />
 
-            <h:selectOneMenu value="#{histogramScores.allSubmissions}" id="allSubmissionsL" required="true"
-              onchange="document.forms[0].submit();" rendered="#{totalScores.scoringOption eq '2'}">
-              <f:selectItem itemValue="3" itemLabel="#{evaluationMessages.all_sub}" />
-              <f:selectItem itemValue="2" itemLabel="#{evaluationMessages.last_sub}" />
-              <f:valueChangeListener type="org.sakaiproject.tool.assessment.ui.listener.evaluation.HistogramListener" />
-            </h:selectOneMenu>
+              <h:selectOneMenu value="#{histogramScores.allSubmissions}" id="allSubmissionsL" required="true"
+                onchange="document.forms[0].submit();" rendered="#{totalScores.scoringOption eq '2'}">
+                <f:selectItem itemValue="3" itemLabel="#{evaluationMessages.all_sub}" />
+                <f:selectItem itemValue="2" itemLabel="#{evaluationMessages.last_sub}" />
+                <f:valueChangeListener type="org.sakaiproject.tool.assessment.ui.listener.evaluation.HistogramListener" />
+              </h:selectOneMenu>
 
-            <h:selectOneMenu value="#{histogramScores.allSubmissions}" id="allSubmissionsH" required="true"
-              onchange="document.forms[0].submit();" rendered="#{totalScores.scoringOption eq '1'}">
-              <f:selectItem itemValue="3" itemLabel="#{evaluationMessages.all_sub}" />
-              <f:selectItem itemValue="1" itemLabel="#{evaluationMessages.highest_sub}" />
-              <f:valueChangeListener type="org.sakaiproject.tool.assessment.ui.listener.evaluation.HistogramListener" />
-            </h:selectOneMenu>
-            <h:selectOneMenu value="#{histogramScores.allSubmissions}" id="allSubmissionsA" required="true"
-              onchange="document.forms[0].submit();" rendered="#{totalScores.scoringOption eq '4'}">
-              <f:selectItem itemValue="3" itemLabel="#{evaluationMessages.all_sub}" />
-              <f:valueChangeListener type="org.sakaiproject.tool.assessment.ui.listener.evaluation.HistogramListener" />
-            </h:selectOneMenu>
+              <h:selectOneMenu value="#{histogramScores.allSubmissions}" id="allSubmissionsH" required="true"
+                onchange="document.forms[0].submit();" rendered="#{totalScores.scoringOption eq '1'}">
+                <f:selectItem itemValue="3" itemLabel="#{evaluationMessages.all_sub}" />
+                <f:selectItem itemValue="1" itemLabel="#{evaluationMessages.highest_sub}" />
+                <f:valueChangeListener type="org.sakaiproject.tool.assessment.ui.listener.evaluation.HistogramListener" />
+              </h:selectOneMenu>
+              <h:selectOneMenu value="#{histogramScores.allSubmissions}" id="allSubmissionsA" required="true"
+                onchange="document.forms[0].submit();" rendered="#{totalScores.scoringOption eq '4'}">
+                <f:selectItem itemValue="3" itemLabel="#{evaluationMessages.all_sub}" />
+                <f:valueChangeListener type="org.sakaiproject.tool.assessment.ui.listener.evaluation.HistogramListener" />
+              </h:selectOneMenu>
+            </label>
           </h:panelGroup>
-
-          <br /><br />
+          <div class="dropdown">
+            <button class="btn btn-link dropdown-toggle" name="Export Button" type="button" data-bs-toggle="dropdown">
+              <h:outputText value="#{evaluationMessages.export}" />
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu row">
+              <li>
+                <h:outputLink value="#{histogramScores.exportStatisticsPdf}" styleClass="d-block" title="#{evaluationMessages.export_as_pdf}" target="_blank">
+                  <h:outputText value="#{evaluationMessages.export_pdf}" />
+                </h:outputLink>
+              </li>
+              <li>
+                <h:outputLink value="#{histogramScores.exportStatisticsXlsx}" styleClass="d-block" title="#{evaluationMessages.export_as_xlsx}" target="_blank">
+                  <h:outputText value="#{evaluationMessages.export_xlsx}" />
+                </h:outputLink>
+              </li>
+            </ul>
+          </div>
+          </h:panelGroup>
 
           <script type="text/javascript" src="/library/webjars/jquery/1.12.4/jquery.min.js"></script>
 
@@ -244,10 +262,44 @@ $Id$
             <h:outputText value="#{histogramScores.standDev}" />
           </td>
         </tr>
+        <tr>
+          <th>
+            <h:outputText value="#{evaluationMessages.skew_coef}" />
+          </th>
+          <td>
+            <h:outputText value="#{histogramScores.skewnessCoefficient}" />
+          </td>
+        </tr>
+        <h:panelGroup rendered="#{histogramScores.trackingQuestion}">
+          <tr>
+            <th>
+              <h:outputText value="#{evaluationMessages.time_min}:" />
+            </th>
+            <td>
+              <h:outputText value="#{histogramScores.timeStats[0]}" />
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <h:outputText value="#{evaluationMessages.time_avg}:" />
+            </th>
+            <td>
+              <h:outputText value="#{histogramScores.timeStats[1]}" />
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <h:outputText value="#{evaluationMessages.time_max}:" />
+            </th>
+            <td>
+              <h:outputText value="#{histogramScores.timeStats[2]}" />
+            </td>
+          </tr>
+        </h:panelGroup>
         </table>
         </h:panelGroup>
         <h:panelGroup layout="block" styleClass="panel panel-default">
-          <div class="card text-center bg-light" style="padding-top: 1px;padding-bottom: 1px;">
+          <div class="card text-center" style="padding-top: 1px;padding-bottom: 1px;">
             <strong>
               <h2>
                 <h:outputText value="#{evaluationMessages.fsd}" />
@@ -262,6 +314,34 @@ $Id$
           </div>
         </h:panelGroup>
         </h:panelGrid>
+
+        <h:panelGroup layout="block" styleClass="page-header" rendered="#{histogramScores.trackingQuestion && histogramScores.timeStatsVariationArray.size() > 0 && histogramScores.timeStatsVariationArray.get(0).get(0) > 0}">
+          <h2>
+            <h:outputText value="#{evaluationMessages.timeStatsVariation_title}" />
+          </h2>
+        </h:panelGroup>
+
+        <h:dataTable styleClass="table table-bordered table-striped presentation" value="#{histogramScores.timeStatsVariationArray}" var="statsVariations" rendered="#{histogramScores.trackingQuestion && histogramScores.timeStatsVariationArray.size() > 0 && histogramScores.timeStatsVariationArray.get(0).get(0) > 0}">
+          <h:column>
+            <h:panelGroup>
+              <h:dataTable styleClass="table panel-body stats-tracking" value="#{statsVariations[2]}" var="statVariation">
+                <h:column>
+                  <f:facet name="header">
+                    <h:outputText value="#{statsVariations[1]}" />
+                  </f:facet>
+                  <h:panelGroup>
+                    <h:panelGroup styleClass="boldText stats-track-answers">
+                      <h:outputText value="#{statVariation[0]}" />
+                    </h:panelGroup>
+                    <h:panelGroup styleClass="elapsed-quantity-col">
+                      <h:outputText value="#{statVariation[1]}" />
+                    </h:panelGroup>
+                  </h:panelGroup>
+                </h:column>
+              </h:dataTable>
+            </h:panelGroup>
+          </h:column>
+        </h:dataTable>
 
         <h:panelGroup rendered="#{histogramScores.showObjectivesColumn=='true'}">
           <div class="objectives">
@@ -319,7 +399,7 @@ $Id$
           </h:outputLabel>
         </h:panelGroup>
 
-        <h:dataTable styleClass="table table-striped presentation" value="#{histogramScores.partInfo}" var="item">
+        <h:dataTable styleClass="table table-bordered table-striped presentation" value="#{histogramScores.partInfo}" var="item">
           <h:column>
             <h:panelGroup>
               <h3 class="part-title">
@@ -367,9 +447,8 @@ $Id$
                       <h:outputText value="#{bar.numStudentsText}" />
                     </span>
                     <div class="progress-stat">
-                      <h:outputText value="<div class=\" progress-bar #{ bar.isCorrect ? 'progress-bar-success' : '' }
-                        test\" role=\"progressbar\" aria-valuenow=\"#{bar.columnHeight}\" aria-valuemin=\"0\"
-                        aria-valuemax=\"100\" style=\"width: #{bar.columnHeight}%;\">"
+                      <h:outputText value="<div class=\" progress-bar #{ bar.isCorrect ? 'bg-success' : 'bg-danger' } \"
+                        style=\"width: #{bar.columnHeight}%;\">"
                         escape="false" />
                         &nbsp;
                     </div>
@@ -403,9 +482,8 @@ $Id$
                       <h:outputText value="#{bar.numStudentsText}" />
                     </span>
                     <div class="progress-stat">
-                      <h:outputText value="<div class=\" progress-bar progress-bar-success\" role=\"progressbar\"
-                        aria-valuenow=\"#{bar.columnHeight}\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width:
-                        #{bar.columnHeight}%;\">"
+                      <h:outputText value="<div class=\" progress-bar #{ bar.isCorrect ? 'bg-success' : 'bg-danger' } \"
+                        style=\"width:#{bar.columnHeight}%;\">"
                         escape="false">
                       </h:outputText>
                       &nbsp;
@@ -443,9 +521,8 @@ $Id$
                       <h:outputText value="#{bar.numStudentsText}" />
                     </span>
                     <div class="progress-stat">
-                      <h:outputText value="<div class=\" progress-bar progress-bar-success\" role=\"progressbar\"
-                        aria-valuenow=\"#{bar.columnHeight}\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width:
-                        #{bar.columnHeight}%;\">"
+                      <h:outputText value="<div class=\" progress-bar #{ bar.isCorrect ? 'bg-success' : 'bg-danger' } \"
+                        style=\"width:#{bar.columnHeight}%;\">"
                         escape="false">
                       </h:outputText>
                       &nbsp;
@@ -482,9 +559,8 @@ $Id$
                       <h:outputText value="#{bar.numStudentsText}" />
                     </span>
                     <div class="progress-stat">
-                      <h:outputText value="<div class=\" progress-bar\" role=\"progressbar\"
-                        aria-valuenow=\"#{bar.columnHeight}\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width:
-                        #{bar.columnHeight}%;\">"
+                      <h:outputText value="<div class=\" progress-bar\"
+                        style=\"width:#{bar.columnHeight}%;\">"
                         escape="false">
                       </h:outputText>
                       &nbsp;
@@ -519,9 +595,8 @@ $Id$
                       <h:outputText value="#{bar.numStudentsText}" />
                     </span>
                     <div class="progress-stat">
-                      <h:outputText value="<div class=\" progress-bar\" role=\"progressbar\"
-                        aria-valuenow=\"#{bar.columnHeight}\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width:
-                        #{bar.columnHeight}%;\">"
+                      <h:outputText value="<div class=\" progress-bar\"
+                        style=\"width:#{bar.columnHeight}%;\">"
                         escape="false">
                       </h:outputText>
                       &nbsp;
@@ -568,8 +643,7 @@ $Id$
                         <h:outputText value="#{itemBar.numStudentsText}" />
                       </span>
                       <div class="progress-stat">
-                        <h:outputText value="<div class=\" progress-bar\" role=\"progressbar\"
-                          aria-valuenow=\"#{itemBar.columnHeight}\" aria-valuemin=\"0\" aria-valuemax=\"100\"
+                        <h:outputText value="<div class=\" progress-bar\"
                           style=\"width: #{itemBar.columnHeight}%;\">" escape="false" />
                           &nbsp;
                       </div>
@@ -587,6 +661,22 @@ $Id$
                 </h:column>
               </h:dataTable>
 
+              <h:dataTable styleClass="table panel-body stats-tracking" rendered="#{histogramScores.trackingQuestion}" 
+              value="#{item.timeStatsArray}" var="timeString">
+                <h:column>
+                  <f:facet name="header">
+                    <h:outputText value="#{evaluationMessages.timeStats_title}" />
+                  </f:facet>
+                  <h:panelGroup>
+                    <h:panelGroup styleClass="boldText stats-track-answers">
+                      <h:outputText value="#{timeString[0]}" />
+                    </h:panelGroup>
+                    <h:panelGroup styleClass="elapsed-quantity-col">
+                      <h:outputText value=" #{timeString[1]}" />
+                    </h:panelGroup>
+                  </h:panelGroup>
+                </h:column>
+              </h:dataTable>
               <!-- 1-2=mcmc 3=mcsc 4=tf 5=essay 6=file 7=audio 8=FIB 9=matching 14=emi -->
 
 	      <h:panelGrid styleClass="table table-condensed table-striped" columns="5" rendered="#{item.questionType == '5' or item.questionType == '6' or item.questionType == '7'}">

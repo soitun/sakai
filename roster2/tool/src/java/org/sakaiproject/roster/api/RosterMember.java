@@ -73,10 +73,10 @@ public class RosterMember {
 	private List<String> additionalNotes;
 	private Map<String, String> groups = new HashMap<>();
 	private Map<String, String> userProperties = new HashMap<>();
-	private int connectionStatus; // connection status to the current user
 	private int totalSiteVisits;
-	private long lastVisitTime;
-	private User user;
+	private String lastVisitTime;
+	private boolean instructor;
+	private boolean canViewProfilePicture;
 
 	public void addGroup(String groupId, String groupTitle) {
 

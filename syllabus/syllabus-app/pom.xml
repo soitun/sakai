@@ -4,7 +4,7 @@
   <parent>
     <artifactId>syllabus-base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>24-SNAPSHOT</version>
+    <version>25-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <name>sakai-syllabus-tool</name>
@@ -17,12 +17,6 @@
         <groupId>taglibs</groupId>
         <artifactId>standard</artifactId>
         <version>1.1.2</version>
-        <exclusions>
-          <exclusion>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
     <dependency>
       <groupId>org.sakaiproject.kernel</groupId>

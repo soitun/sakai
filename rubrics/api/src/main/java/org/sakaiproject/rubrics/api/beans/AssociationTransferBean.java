@@ -14,6 +14,7 @@
 package org.sakaiproject.rubrics.api.beans;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.sakaiproject.rubrics.api.model.ToolItemRubricAssociation;
 
@@ -23,13 +24,16 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AssociationTransferBean {
+
     private Long id;
     private String itemId;
-    private Map<String, Boolean> parameters;
+    private Map<String, Integer> parameters;
     private Long rubricId;
     private String siteId;
     private String toolId;
+
     public AssociationTransferBean(ToolItemRubricAssociation association) {
+        Objects.requireNonNull(association, "association must not be null in constructor");
         id = association.getId();
         itemId = association.getItemId();
         toolId = association.getToolId();

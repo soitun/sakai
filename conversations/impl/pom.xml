@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.sakaiproject.conversations</groupId>
     <artifactId>sakai-conversations-base</artifactId>
-    <version>24-SNAPSHOT</version>
+    <version>25-SNAPSHOT</version>
   </parent>
 
   <artifactId>sakai-conversations-impl</artifactId>
@@ -42,6 +42,14 @@
       <artifactId>sakai-conversations-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.sakaiproject.grading</groupId>
+      <artifactId>sakai-grading-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.edu-services.sections</groupId>
+      <artifactId>sections-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.sakaiproject.scheduler</groupId>
       <artifactId>scheduler-api</artifactId>
     </dependency>
@@ -60,6 +68,10 @@
     <dependency>
       <groupId>org.sakaiproject.entitybroker</groupId>
       <artifactId>entitybroker-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.lti</groupId>
+      <artifactId>lti-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -112,6 +124,10 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

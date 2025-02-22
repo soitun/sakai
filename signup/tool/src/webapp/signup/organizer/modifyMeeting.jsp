@@ -5,16 +5,16 @@
 
 <f:view>
 	<jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="session">
-	   <jsp:setProperty name="msgs" property="baseName" value="messages"/>
+	   <jsp:setProperty name="msgs" property="baseName" value="signup"/>
 	</jsp:useBean>
 	<sakai:view_container title="Signup Tool">
 		<style type="text/css">
-			@import url("/sakai-signup-tool/css/signupStyle.css");
+			@import url("/sakai-signup-tool/css/signupStyle.css${Portal.CDNQuery}");
 		</style>	
 
 		<h:outputText value="#{Portal.latestJQuery}" escape="false"/>
-        <script src="/library/js/lang-datepicker/lang-datepicker.js"></script>
-        <script src="/sakai-signup-tool/js/signupScript.js"></script>
+        <script src="/library/js/lang-datepicker/lang-datepicker.js${Portal.CDNQuery}"></script>
+        <script src="/sakai-signup-tool/js/signupScript.js${Portal.CDNQuery}"></script>
 
 		<script>
 			jQuery(document).ready(function(){
@@ -423,7 +423,7 @@
 							</h:panelGroup>
 
 							<%-- single: --%>
-							<h:panelGroup rendered="#{EditMeetingSignupMBean.groupType}" styleClass="si" layout="block">
+							<h:panelGroup rendered="#{EditMeetingSignupMBean.groupType}" styleClass="single-box" layout="block">
 								<div class="form-group row">
 									<t:selectOneRadio id="groupSubradio" value="#{EditMeetingSignupMBean.unlimited}" onclick="switchSingle(value)" styleClass="meetingRadioBtn" layout="spread">
 										<f:selectItem itemValue="#{false}" itemLabel="#{msgs.tab_max_attendee}"/>

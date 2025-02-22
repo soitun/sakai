@@ -1,7 +1,6 @@
 <!-- start: chef_assignments_instructor_report_submissions.vm  -->
-#module("/webcomponents/sakai-user-photo.js")
 <div class="portletBody sakai-asn-grade-report">
-	#navBarHREF( $allowAddAssignment $withGrade $allowGradeSubmission $allowAddAssignment $allowRecoverAssignment $allowAllGroups $assignmentscheck $allowUpdateSite $enableViewOption $view "" )
+	#navBarHREF( $allowAddAssignment $allowGradeSubmission $allowAddAssignment $allowRecoverAssignment $allowAllGroups $assignmentscheck $allowUpdateSite $enableViewOption $view "" )
 
 	#if ($alertMessage)<div class="sak-banner-error"><strong>$tlang.getString("gen.alert")</strong> $alertMessage</div>#end
 
@@ -35,7 +34,8 @@
 			#end
 			</div>
 			<div class="sakai-table-toolBar-centre">
-				<a href="$accessPointUrl" title="$!tlang.getString('downspr')" id="downloadAll">$!tlang.getString('downspr')</a>
+				<a href="$accessPointUrl" title="$!tlang.getString('downspr')" id="downloadAll">$!tlang.getString('downspr')</a> - 
+				<a href="$accessPointUrlByColumns" title="$!tlang.getString('downsprByColumns')" id="downloadAllByColumns">$!tlang.getString('downsprByColumns')</a>
 			</div>
 			<div class="sakai-table-pagerContainer">
 				#pagerPanel("pager1")
@@ -48,6 +48,7 @@
 					$tlang.getString("gen.thearecur2")
 				</p>
 			#else
+				<div class="table-responsive">
 				<table class="table table-striped table-hover table-bordered" summary="$tlang.getString("gen.viewasslistreportsummary")">
 					<tr>
 						<th id="studentname">
@@ -224,7 +225,7 @@
 										 $tlang.getString("gen.pf")
 									#elseif ($gradeScale == 5)
 										## Grade type that only requires a check
-										<img src="#imageLink("sakai/checkon.gif")" border="0" alt="$tlang.getString("check")" />
+										<span class="si si-check fs-3" aria-label="$tlang.getString("check")" />
 									#end
 							</td>
 							<td headers="submitted">
@@ -254,9 +255,15 @@
 						</tr>
 					#end
 				</table>
+				</div>
 			#end
 			<input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
 		</form>
 	#end
+	<div class="sakai-table-toolBar">
+		<div class="sakai-table-pagerContainer">
+			#pagerPanel("pager1")
+		</div>
+	</div>
 </div>
 <!-- end: chef_assignments_instructor_report_submissions.vm  -->

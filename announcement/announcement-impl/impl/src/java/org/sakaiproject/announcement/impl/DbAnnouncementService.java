@@ -24,10 +24,7 @@ package org.sakaiproject.announcement.impl;
 // import
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import lombok.Setter;
@@ -37,7 +34,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import org.sakaiproject.announcement.api.AnnouncementMessage;
-import org.sakaiproject.announcement.api.ViewableFilter;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
 import org.sakaiproject.authz.api.Role;
@@ -489,7 +485,7 @@ public class DbAnnouncementService extends BaseAnnouncementService
 						else
 						{
 							// m.getReference() won't work cause we didn't give it its channel...
-							Reference channel = m_entityManager.newReference(channelId);
+							Reference channel = entityManager.newReference(channelId);
 							String ref = messageReference(channel.getContext(), channel.getId(), m.getId());
 							pubview = getPubView(ref);
 
@@ -571,7 +567,7 @@ public class DbAnnouncementService extends BaseAnnouncementService
 		// get the realm
 		try
 		{
-			AuthzGroup realm = m_authzGroupService.getAuthzGroup(ref);
+			AuthzGroup realm = authzGroupService.getAuthzGroup(ref);
 
 			// if the announcement realm has "pubview" role, then the announcement is publicly viewable
 			Role pubview = realm.getRole("pubview");
@@ -603,30 +599,5 @@ public class DbAnnouncementService extends BaseAnnouncementService
 			// if no realm, no pub view
 			return false;
 		}
-	}
-
-	public Map<String, List<AnnouncementMessage>> getViewableAnnouncementsForCurrentUser(Integer maxAgeInDays) {
-
-		Map<String, List<AnnouncementMessage>> allAnnouncements = new HashMap<>();
-
-		// First grab all the current user's sites
-		m_siteService.getUserSites().forEach(site -> {
-
-			String siteId = site.getId();
-			String channelRef = channelReference(siteId, "main");
-			try {
-				ViewableFilter viewableFilter = new ViewableFilter(null, null, Integer.MAX_VALUE, this);
-				if (maxAgeInDays != null) {
-					long now = Instant.now().toEpochMilli();
-					Time afterDate = m_timeService.newTime(now - (maxAgeInDays * 24 * 60 * 60 * 1000));
-					viewableFilter.setFilter(new MessageSelectionFilter(afterDate, null, false));
-				}
-				allAnnouncements.put(site.getId(), (List<AnnouncementMessage>) getMessages(channelRef, viewableFilter, true, true));
-			} catch (Exception e) {
-				log.warn("Failed to add announcements from site {}", siteId, e);
-			}
-		});
-
-		return	allAnnouncements;
 	}
 }

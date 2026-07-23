@@ -495,15 +495,15 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
                 if (level > 5) {
                     level = 5;
                 }
-                String imagePath = "/lessonbuilder-tool/images/";
+                String iconClass = "";
 
                 SimplePageLogEntry logEntry = simplePageBean.getLogEntry(entry.itemId);
                 String note = null;
                 if (logEntry != null && logEntry.isComplete()) {
-                    imagePath += "checkmark.png";
+                    iconClass = "bi-check2";
                     note = messageLocator.getMessage("simplepage.status.completed");
                 } else if (logEntry != null && !logEntry.getDummy()) {
-                    imagePath += "hourglass.png";
+                    iconClass = "bi-hourglass-split";
                     note = messageLocator.getMessage("simplepage.status.inprogress");
                 } else if (!canEditPage && somePagesHavePrerequisites) {
                     // it's too complex to compute prerequisites for all pages, and
@@ -513,16 +513,16 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
                     // in progress or done.
                     continue;
                 } else {
-                    imagePath += "not-required.png";
+                    iconClass = "invisible"; // No icon but maintain spacing
                 }
-                UIOutput.make(row, "status-image").decorate(new UIFreeAttributeDecorator("src", imagePath));
+                UIOutput.make(row, "status-image").decorate(new UIStyleDecorator(iconClass));
                 GeneralViewParameters p = new GeneralViewParameters(ShowPageProducer.VIEW_ID);
                 p.setSendingPage(entry.pageId);
                 p.setItemId(entry.itemId);
                 // reset the path to the saved one
                 p.setPath("log");
                 UIInternalLink.make(row, "link", p).
-                        decorate(new UIFreeAttributeDecorator("style", "padding-left: " + (2*level) + "em"));
+                        decorate(new UIFreeAttributeDecorator("style", "padding-left: " + level + "em"));
                 String levelstr = null;
                 if (level > 0) {
                     levelstr = messageLocator.getMessage("simplepage.status.level").replace("{}", Integer.toString(level));
@@ -541,7 +541,7 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
 
                 if (ServerConfigurationService.getBoolean("lessonbuilder.enable-show-items", true)) {
                     UIOutput.make(row, "item-list-toggle");
-                    UIOutput.make(row, "itemListContainer").decorate(new UIFreeAttributeDecorator("style", "margin-left: " + (3*level) + "em"));
+                    UIOutput.make(row, "itemListContainer");
                     UIOutput.make(row, "itemList");
 
                     Set<String> myGroups = simplePageBean.getMyGroups();
@@ -619,7 +619,7 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
                 params.setSendingPage(entry.pageId);
 
                 UIInternalLink.make(row, "link", params).
-                        decorate(new UIFreeAttributeDecorator("style", "padding-left: " + (2*level) + "em")).
+                        decorate(new UIFreeAttributeDecorator("style", "padding-left: " + level + "em")).
                         decorate(new UIFreeAttributeDecorator("target", "_blank"));
                 String levelstr = messageLocator.getMessage("simplepage.status.level").replace("{}", Integer.toString(level)) + " ";
                 if (level > 0) {
@@ -701,21 +701,41 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
 
         switch (pageItem.getType()) {
             case SimplePageItem.FORUM:
-                return new UIStyleDecorator("icon-sakai--sakai-forums");
+                return new UIStyleDecorator("si si-sakai-forums");
             case SimplePageItem.ASSIGNMENT:
-                return new UIStyleDecorator("icon-sakai--sakai-assignment-grades");
+                return new UIStyleDecorator("si si-sakai-assignment-grades");
             case SimplePageItem.ASSESSMENT:
-                return new UIStyleDecorator("icon-sakai--sakai-samigo");
+                return new UIStyleDecorator("si si-sakai-samigo");
             case SimplePageItem.SCORM:
-                return new UIStyleDecorator("icon-sakai--sakai-scorm-tool");
+                return new UIStyleDecorator("si si-sakai-scorm-tool");
             case SimplePageItem.QUESTION:
-                return new UIStyleDecorator("fa-question");
+                return new UIStyleDecorator("bi-question-circle");
             case SimplePageItem.COMMENTS:
-                return new UIStyleDecorator("fa-commenting");
+                return new UIStyleDecorator("bi-chat-dots");
             case SimplePageItem.BLTI:
-                return new UIStyleDecorator("fa-globe");
+                return new UIStyleDecorator("bi-box-arrow-up-right");
             case SimplePageItem.PAGE:
-                return new UIStyleDecorator("fa-folder-open-o");
+                return new UIStyleDecorator("bi-folder");
+            case SimplePageItem.BREAK:
+                return new UIStyleDecorator("bi-textarea-t");
+            case SimplePageItem.URL:
+                return new UIStyleDecorator("bi-link-45deg");
+            case SimplePageItem.STUDENT_CONTENT:
+                return new UIStyleDecorator("bi-person-square");
+            case SimplePageItem.PEEREVAL:
+                return new UIStyleDecorator("bi-people");
+            case SimplePageItem.CHECKLIST:
+                return new UIStyleDecorator("bi-list-check");
+            case SimplePageItem.FORUM_SUMMARY:
+                return new UIStyleDecorator("si si-sakai-forums");
+            case SimplePageItem.ANNOUNCEMENTS:
+                return new UIStyleDecorator("si si-sakai-announcements");
+            case SimplePageItem.TWITTER:
+                return new UIStyleDecorator("bi-twitter");
+            case SimplePageItem.CALENDAR:
+                return new UIStyleDecorator("si si-sakai-schedule");
+            case SimplePageItem.RESOURCE_FOLDER:
+                return new UIStyleDecorator("bi-folder2-open");
             case SimplePageItem.RESOURCE:
                 return getImageSourceDecoratorFromMimeType(pageItem);
             case SimplePageItem.MULTIMEDIA:
@@ -723,7 +743,7 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
             case SimplePageItem.TEXT:
                 return getImageSourceDecoratorFromMimeType(pageItem);
             default:
-                return new UIStyleDecorator("");
+                return new UIStyleDecorator("bi-type");
         } 
     }
 
@@ -740,7 +760,7 @@ public class PagePickerProducer implements ViewComponentProducer, NavigationCase
         String src = imageToMimeMap.get(mimeType);
 
         if (src == null) {
-            src = "fa-file-o";
+            src = "bi-file-text";
         }
         
         return new UIStyleDecorator(src);
